@@ -1,7 +1,15 @@
 import { ThemeProvider } from "./theme-provider";
 
+import { NuqsAdapter } from "nuqs/adapters/react";
+
 const Providers = ({ children }: React.PropsWithChildren) => {
-  return <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>;
+  return (
+    <>
+      <NuqsAdapter>
+        <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
+      </NuqsAdapter>
+    </>
+  );
 };
 
 export default Providers;

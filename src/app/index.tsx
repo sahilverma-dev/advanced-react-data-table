@@ -1,22 +1,69 @@
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-// import { generateData } from "@/data";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { generateData, type Person } from "@/data";
+import { useDataTable } from "@/hooks/use-data-table";
+
+import { createColumnHelper } from "@tanstack/react-table";
+
+const columnHelper = createColumnHelper<Person>();
+const columns = [
+  columnHelper.accessor("id", {
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    size: 50,
+    enableSorting: false,
+    enableHiding: false,
+  }),
+  columnHelper.accessor("firstName", {
+    header: "First Name",
+  }),
+  columnHelper.accessor("lastName", {
+    header: "Last Name",
+  }),
+  columnHelper.accessor("age", {
+    header: "Age",
+  }),
+  columnHelper.accessor("visits", {
+    header: "Visits",
+  }),
+  columnHelper.accessor("status", {
+    header: "Status",
+  }),
+  columnHelper.accessor("progress", {
+    header: "Profile Progress",
+  }),
+];
+
+const users = generateData(10000);
 
 const App = () => {
-  // const users = generateData(100);
-  // console.log(users);
+  const { table } = useDataTable({
+    data: users,
+    columns,
+    pageCount: 1,
+  });
 
-  const today = new Date();
   return (
-    <div>
-      <DateRangePicker
-        showCompare={false}
-        initialDateFrom={today}
-        maxDate={today}
-        align="center"
-        onUpdate={({ range }) => {
-          console.log(range);
-        }}
-      />
+    <div className="p-4">
+      <DataTable table={table} height="500px">
+        <DataTableToolbar table={table}>hello</DataTableToolbar>
+      </DataTable>
     </div>
   );
 };

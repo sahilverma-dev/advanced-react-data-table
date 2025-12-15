@@ -49,7 +49,7 @@
 
 ### **Rows & Cells**
 
-- Custom cell rendering per column
+- Custom cell rendering per column (cell variants)
 - Row selection (checkbox, click-to-select)
 - Click-to-focus cells
 - Cell tooltips (for truncated or rich data)
