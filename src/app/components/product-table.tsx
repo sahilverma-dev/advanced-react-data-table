@@ -1,8 +1,25 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import DataTableDefaultCell from "@/components/data-table/cells/data-table-default-cell";
 import { DataTable } from "@/components/data-table/data-table";
+import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+
+import { Checkbox } from "@/components/ui/checkbox";
 import { useDataTable } from "@/hooks/use-data-table";
 import { faker } from "@faker-js/faker";
 import type { ColumnDef } from "@tanstack/react-table";
+import { HomeIcon, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTableFilterList } from "@/components/data-table/data-table-filter-list";
+import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-advanced-toolbar";
+import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-menu";
 
 export interface Product {
   id: string;
@@ -84,11 +101,59 @@ const generateFakeProduct = (): Product => ({
 
 const productColumns: ColumnDef<Product>[] = [
   {
+    id: "select",
+
+    header: ({ table }) => (
+      <Checkbox
+        aria-label="Select all"
+        className="after:-inset-2.5 relative transition-[shadow,border] after:absolute after:content-[''] hover:border-primary/40 mr-2"
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      />
+    ),
+    cell: ({ row, table }) => (
+      <Checkbox
+        aria-label="Select row"
+        className="after:-inset-2.5 relative transition-[shadow,border] after:absolute after:content-[''] hover:border-primary/40 mr-2"
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => {
+          const onRowSelect = table.options.meta?.onRowSelect;
+          if (onRowSelect) {
+            onRowSelect(row.index, !!value, false);
+          } else {
+            row.toggleSelected(!!value);
+          }
+        }}
+        onClick={(event: React.MouseEvent) => {
+          if (event.shiftKey) {
+            event.preventDefault();
+            const onRowSelect = table.options.meta?.onRowSelect;
+            if (onRowSelect) {
+              onRowSelect(row.index, !row.getIsSelected(), true);
+            }
+          }
+        }}
+      />
+    ),
+    size: 40,
+    enableSorting: false,
+    enableHiding: false,
+    enableResizing: false,
+  },
+  {
     header: "ID",
     accessorKey: "id",
     cell: ({ row }) => (
       <DataTableDefaultCell>{row.getValue("id")}</DataTableDefaultCell>
     ),
+    meta: {
+      variant: "multiSelect",
+      label: "ID",
+      icon: HomeIcon,
+    },
   },
   { header: "Name", accessorKey: "name" },
   { header: "Description", accessorKey: "description" },
@@ -121,18 +186,73 @@ const productColumns: ColumnDef<Product>[] = [
   { header: "Metadata Origin", accessorKey: "metadata.origin" },
   { header: "Metadata Packaging", accessorKey: "metadata.packaging" },
   { header: "Metadata Eco-Friendly", accessorKey: "metadata.ecoFriendly" },
+  {
+    header: "Actions",
+    id: "actions",
+    meta: {
+      variant: "text",
+    },
+    cell: () => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>More actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>More actions</DropdownMenuLabel>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
 ];
 
 const data = Array.from({ length: 50 }, () => generateFakeProduct());
 
 const ProductDataTable = () => {
-  const { table } = useDataTable({
+  const { table, shallow, debounceMs, throttleMs } = useDataTable({
     data,
     columns: productColumns,
     pageCount: 1,
+
+    initialState: {
+      columnPinning: {
+        left: ["select"],
+        right: ["actions"],
+      },
+    },
+
+    // enableSearch: true,
+    // enablePaste: true,
   });
 
-  return <DataTable table={table} height="500px" />;
+  return (
+    <DataTable table={table}>
+      <DataTableToolbar table={table}>
+        <DataTableAdvancedToolbar table={table}>
+          <DataTableFilterList
+            table={table}
+            shallow={shallow}
+            debounceMs={debounceMs}
+            throttleMs={throttleMs}
+            align="start"
+          />
+          <DataTableFilterMenu
+            table={table}
+            shallow={shallow}
+            debounceMs={debounceMs}
+            throttleMs={throttleMs}
+          />
+        </DataTableAdvancedToolbar>
+        <DataTableSortList table={table} align="end" />
+      </DataTableToolbar>
+    </DataTable>
+  );
 };
 
 export default ProductDataTable;

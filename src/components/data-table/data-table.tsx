@@ -13,6 +13,7 @@ import {
 import { getCommonPinningStyles } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import { DataGridColumnHeader } from "./headers/data-table-column-header";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
@@ -44,17 +45,22 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className={cn("border-r")}
+                    className={cn("border-r p-0")}
                     style={{
                       ...getCommonPinningStyles({ column: header.column }),
                     }}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
+                    {header.isPlaceholder ? null : typeof header.column
+                        .columnDef.header === "function" ? (
+                      <div className="size-full px-3 py-1.5">
+                        {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                      </div>
+                    ) : (
+                      <DataGridColumnHeader header={header} table={table} />
+                    )}
                   </TableHead>
                 ))}
               </TableRow>

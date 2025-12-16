@@ -6,6 +6,12 @@ import type { ColumnSort, Row, RowData } from "@tanstack/react-table";
 declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
     queryKeys?: QueryKeys;
+    onColumnClick?: (columnId: string) => void;
+    onRowSelect?: (
+      rowIndex: number,
+      checked: boolean,
+      shiftKey: boolean
+    ) => void;
   }
 
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -15,9 +21,55 @@ declare module "@tanstack/react-table" {
     options?: Option[];
     range?: [number, number];
     unit?: string;
+    cell?: CellOpts;
     icon?: React.FC<React.SVGProps<SVGSVGElement>>;
   }
 }
+
+export interface CellSelectOption {
+  label: string;
+  value: string;
+  icon?: React.FC<React.SVGProps<SVGSVGElement>>;
+  count?: number;
+}
+
+export type CellOpts =
+  | {
+      variant: "short-text";
+    }
+  | {
+      variant: "long-text";
+    }
+  | {
+      variant: "number";
+      min?: number;
+      max?: number;
+      step?: number;
+    }
+  | {
+      variant: "select";
+      options: CellSelectOption[];
+    }
+  | {
+      variant: "multi-select";
+      options: CellSelectOption[];
+    }
+  | {
+      variant: "checkbox";
+    }
+  | {
+      variant: "date";
+    }
+  | {
+      variant: "url";
+    }
+  | {
+      variant: "file";
+      maxFileSize?: number;
+      maxFiles?: number;
+      accept?: string;
+      multiple?: boolean;
+    };
 
 export interface QueryKeys {
   page: string;
