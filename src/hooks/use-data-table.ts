@@ -30,7 +30,7 @@ import {
 import * as React from "react";
 
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { getSortingStateParser } from "@/lib/parsers";
+import { getFiltersStateParser, getSortingStateParser } from "@/lib/parsers";
 import type { ExtendedColumnSort, QueryKeys } from "@/types/data-table";
 
 const PAGE_KEY = "page";
@@ -226,9 +226,28 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       []
     );
   }, [filterValues, enableAdvancedFilter]);
+  const [advancedFilters] = useQueryState(
+    filtersKey,
+    getFiltersStateParser(columnIds)
+      .withOptions(queryStateOptions)
+      .withDefault([])
+  );
 
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(initialColumnFilters);
+
+  React.useEffect(() => {
+    if (!enableAdvancedFilter) return;
+
+    setColumnFilters(
+      advancedFilters.map((filter) => {
+        return {
+          id: filter.id,
+          value: filter.value,
+        };
+      })
+    );
+  }, [advancedFilters, enableAdvancedFilter]);
 
   const onColumnFiltersChange = React.useCallback(
     (updaterOrValue: Updater<ColumnFiltersState>) => {
