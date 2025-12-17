@@ -1,5 +1,11 @@
+import ProductDataTable from "./components/product-data-table";
+
 const App = () => {
-  return <div>App</div>;
+  return (
+    <div>
+      <ProductDataTable />
+    </div>
+  );
 };
 
 export default App;
