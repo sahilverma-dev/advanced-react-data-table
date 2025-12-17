@@ -2,7 +2,7 @@ import ProductDataTable from "./components/product-data-table";
 
 const App = () => {
   return (
-    <div>
+    <div className="p-4">
       <ProductDataTable />
     </div>
   );

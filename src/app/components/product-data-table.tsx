@@ -8,6 +8,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-advanced-toolbar";
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
 import { DataTableFilterList } from "@/components/data-table/data-table-filter-list";
+// import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 
 const categories: ProductCategory[] = [
   "electronics",
@@ -119,7 +120,10 @@ const ProductDataTable = () => {
     manualFiltering: false,
     initialState: {
       sorting: [{ id: "createdAt", desc: true }],
-      columnPinning: { right: ["actions"] },
+      columnPinning: {
+        left: ["select"],
+        right: ["actions"],
+      },
     },
     // queryKeys:["products"],
     getRowId: (originalRow) => originalRow.id,
@@ -129,6 +133,11 @@ const ProductDataTable = () => {
 
   return (
     <DataTable table={table}>
+      {/* <DataTableToolbar table={table} /> */}
+
+      {/* <DataTableToolbar table={table}>
+        <DataTableSortList table={table} align="end" />
+      </DataTableToolbar> */}
       <DataTableAdvancedToolbar table={table}>
         <DataTableSortList table={table} align="start" />
         <DataTableFilterList

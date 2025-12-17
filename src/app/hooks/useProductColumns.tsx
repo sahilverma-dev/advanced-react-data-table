@@ -28,12 +28,51 @@ import {
   Calendar,
   Tags,
   FileText,
+  EllipsisVerticalIcon,
 } from "lucide-react";
 // import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            aria-label="Select all"
+            className="translate-y-0.5"
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            aria-label="Select row"
+            className="translate-y-0.5"
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+          />
+        ),
+        enableHiding: false,
+        enableSorting: false,
+        size: 40,
+      },
       // Core
       {
         enableColumnFilter: true,
@@ -508,6 +547,35 @@ export const useProductColumns = () => {
         header: "Notes",
         size: 260,
         cell: ({ getValue }) => getValue<string | null>() ?? "—",
+      },
+      {
+        enableColumnFilter: false,
+        accessorKey: "actions",
+        header: "Actions",
+        size: 260,
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <EllipsisVerticalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel
+                onClick={() => {
+                  console.log(row.original);
+                }}
+              >
+                Actions
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>View</DropdownMenuItem>
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem>Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
       },
     ],
     []
