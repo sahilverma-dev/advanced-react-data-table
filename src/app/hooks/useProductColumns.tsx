@@ -29,6 +29,7 @@ import {
   Tags,
   FileText,
 } from "lucide-react";
+// import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
@@ -44,6 +45,9 @@ export const useProductColumns = () => {
         },
         accessorKey: "name",
         header: "Name",
+        // header: ({ column, table }) => (
+        //   <DataTableColumnHeader table={table} column={column} label="Name" />
+        // ),
         size: 220,
       },
       {

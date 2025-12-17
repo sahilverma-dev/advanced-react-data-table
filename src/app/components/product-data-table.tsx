@@ -114,6 +114,9 @@ const ProductDataTable = () => {
     columns,
     pageCount: 1,
     enableAdvancedFilter: true,
+    manualPagination: false,
+    manualSorting: false,
+    manualFiltering: false,
     initialState: {
       sorting: [{ id: "createdAt", desc: true }],
       columnPinning: { right: ["actions"] },
