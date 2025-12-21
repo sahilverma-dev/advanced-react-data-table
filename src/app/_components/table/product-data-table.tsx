@@ -1,6 +1,6 @@
 "use client";
 
-import DataTable from "@/components/data-table/components/data-table";
+import { DataTable } from "@/components/data-table/components/data-table";
 import { useDataTable } from "@/components/data-table/hooks/useDataTable";
 import { faker } from "@faker-js/faker";
 import type { ColumnDef } from "@tanstack/react-table";

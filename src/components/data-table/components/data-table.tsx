@@ -1,4 +1,5 @@
-import { flexRender, type Table as ITable } from "@tanstack/react-table";
+import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
+import type * as React from "react";
 
 import {
   Table,
@@ -8,44 +9,49 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getCommonPinningStyles } from "../lib/data-table";
+import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./data-table-pagination";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import React from "react";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
-  table: ITable<TData>;
+  table: TanstackTable<TData>;
+  actionBar?: React.ReactNode;
   height?: number | string;
 }
 
-const DataTable = <TData,>({
+export function DataTable<TData>({
   table,
-  height = 500,
+  actionBar,
+  children,
   className,
+  height = 500,
   ...props
-}: DataTableProps<TData>) => {
+}: DataTableProps<TData>) {
   return (
-    <div
-      className={cn("flex w-full flex-col gap-2.5 overflow-hidden", className)}
-      {...props}
-    >
+    <div className={cn("flex w-full flex-col gap-2", className)} {...props}>
+      {children}
       <ScrollArea className="overflow-auto border" style={{ height }}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    style={{
+                      ...getCommonPinningStyles({ column: header.column }),
+                    }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -57,7 +63,12 @@ const DataTable = <TData,>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        ...getCommonPinningStyles({ column: cell.column }),
+                      }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -78,11 +89,14 @@ const DataTable = <TData,>({
             )}
           </TableBody>
         </Table>
-        <ScrollBar orientation="vertical" />
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
-      <DataTablePagination table={table} />
+      <div className="flex flex-col gap-2.5">
+        <DataTablePagination table={table} />
+        {actionBar &&
+          table.getFilteredSelectedRowModel().rows.length > 0 &&
+          actionBar}
+      </div>
     </div>
   );
-};
-
-export default DataTable;
+}
