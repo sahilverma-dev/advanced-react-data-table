@@ -616,8 +616,11 @@ export const useProductColumns = () => {
       {
         enableColumnFilter: false,
         accessorKey: "actions",
-        header: "Actions",
-
+        header: () => null,
+        enableHiding: false,
+        enableResizing: false,
+        enableSorting: false,
+        size: 40,
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
