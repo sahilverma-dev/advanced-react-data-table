@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { getCommonPinningStyles } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
+import { DataTableColumnHeader } from "./data-table-column-header";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
@@ -44,12 +45,17 @@ export function DataTable<TData>({
                       ...getCommonPinningStyles({ column: header.column }),
                     }}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
+                    {header.isPlaceholder ? null : typeof header.column
+                        .columnDef.header === "function" ? (
+                      <div className="size-full px-3 py-1.5">
+                        {flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
+                      </div>
+                    ) : (
+                      <DataTableColumnHeader header={header} table={table} />
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -71,7 +77,7 @@ export function DataTable<TData>({
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}

@@ -1,14 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ColumnSort, Row, RowData } from "@tanstack/react-table";
 import type { DataTableConfig } from "@/config/data-table";
 import type { FilterItemSchema } from "@/lib/parsers";
 
 declare module "@tanstack/react-table" {
-  // biome-ignore lint/correctness/noUnusedVariables: TData is used in the TableMeta interface
   interface TableMeta<TData extends RowData> {
     queryKeys?: QueryKeys;
+    onColumnClick?: (columnId: string) => void;
   }
 
-  // biome-ignore lint/correctness/noUnusedVariables: TData and TValue are used in the ColumnMeta interface
   interface ColumnMeta<TData extends RowData, TValue> {
     label?: string;
     placeholder?: string;
@@ -17,6 +17,7 @@ declare module "@tanstack/react-table" {
     range?: [number, number];
     unit?: string;
     icon?: React.FC<React.SVGProps<SVGSVGElement>>;
+    cell?: CellOpts;
   }
 }
 
@@ -51,3 +52,48 @@ export interface DataTableRowAction<TData> {
   row: Row<TData>;
   variant: "update" | "delete";
 }
+
+export interface CellSelectOption {
+  label: string;
+  value: string;
+  icon?: React.FC<React.SVGProps<SVGSVGElement>>;
+  count?: number;
+}
+
+export type CellOpts =
+  | {
+      variant: "short-text";
+    }
+  | {
+      variant: "long-text";
+    }
+  | {
+      variant: "number";
+      min?: number;
+      max?: number;
+      step?: number;
+    }
+  | {
+      variant: "select";
+      options: CellSelectOption[];
+    }
+  | {
+      variant: "multi-select";
+      options: CellSelectOption[];
+    }
+  | {
+      variant: "checkbox";
+    }
+  | {
+      variant: "date";
+    }
+  | {
+      variant: "url";
+    }
+  | {
+      variant: "file";
+      maxFileSize?: number;
+      maxFiles?: number;
+      accept?: string;
+      multiple?: boolean;
+    };
