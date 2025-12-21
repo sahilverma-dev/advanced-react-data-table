@@ -5,7 +5,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,34 +21,17 @@ interface DataTablePaginationProps<TData> extends React.ComponentProps<"div"> {
   pageSizeOptions?: number[];
 }
 
-import { useState } from "react";
-
-// ...
-
 export function DataTablePagination<TData>({
   table,
   pageSizeOptions = [10, 20, 30, 40, 50],
   className,
   ...props
 }: DataTablePaginationProps<TData>) {
-  const [pageInput, setPageInput] = useState(
-    table.getState().pagination.pageIndex + 1
-  );
-
-  const pageIndex = table.getState().pagination.pageIndex;
-  const [lastPageIndex, setLastPageIndex] = useState(pageIndex);
-
-  // Sync pageInput with pageIndex when pageIndex changes externally
-  if (pageIndex !== lastPageIndex) {
-    setLastPageIndex(pageIndex);
-    setPageInput(pageIndex + 1);
-  }
-
   return (
     <div
       className={cn(
         "flex w-full flex-col-reverse items-center justify-between gap-4 overflow-auto p-1 sm:flex-row sm:gap-8",
-        className
+        className,
       )}
       {...props}
     >
@@ -58,7 +40,6 @@ export function DataTablePagination<TData>({
         {table.getFilteredRowModel().rows.length} row(s) selected.
       </div>
       <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
-        {/* ... Rows per page selector ... */}
         <div className="flex items-center space-x-2">
           <p className="whitespace-nowrap font-medium text-sm">Rows per page</p>
           <Select
@@ -80,33 +61,8 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
         <div className="flex items-center justify-center font-medium text-sm">
-          Page
-          <Input
-            className="mx-2 h-8 w-16"
-            min={1}
-            max={table.getPageCount()}
-            type="number"
-            value={pageInput}
-            onChange={(e) => setPageInput(Number(e.target.value))}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const page = pageInput ? pageInput - 1 : 0;
-                table.setPageIndex(page);
-              }
-            }}
-          />
-          of {table.getPageCount()}
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2 h-8"
-            onClick={() => {
-              const page = pageInput ? pageInput - 1 : 0;
-              table.setPageIndex(page);
-            }}
-          >
-            Go
-          </Button>
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
         </div>
         <div className="flex items-center space-x-2">
           <Button

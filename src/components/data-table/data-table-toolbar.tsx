@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { DataTableDateFilter } from "@/components/data-table/data-table-date-filter";
+import { DataTableExportOptions } from "@/components/data-table/data-table-export-options";
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { DataTableSliderFilter } from "@/components/data-table/data-table-slider-filter";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
@@ -26,7 +27,7 @@ export function DataTableToolbar<TData>({
 
   const columns = React.useMemo(
     () => table.getAllColumns().filter((column) => column.getCanFilter()),
-    [table],
+    [table]
   );
 
   const onReset = React.useCallback(() => {
@@ -39,7 +40,7 @@ export function DataTableToolbar<TData>({
       aria-orientation="horizontal"
       className={cn(
         "flex w-full items-start justify-between gap-2 p-1",
-        className,
+        className
       )}
       {...props}
     >
@@ -62,11 +63,13 @@ export function DataTableToolbar<TData>({
       </div>
       <div className="flex items-center gap-2">
         {children}
+        <DataTableExportOptions table={table} />
         <DataTableViewOptions table={table} align="end" />
       </div>
     </div>
   );
 }
+
 interface DataTableToolbarFilterProps<TData> {
   column: Column<TData>;
 }

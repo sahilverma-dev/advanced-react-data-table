@@ -1,7 +1,5 @@
-// params constants
+"use client";
 
-import { getSortingStateParser } from "@/lib/parsers";
-import type { ExtendedColumnSort, QueryKeys } from "@/types/data-table";
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -24,13 +22,16 @@ import {
   parseAsArrayOf,
   parseAsInteger,
   parseAsString,
-  useQueryState,
-  useQueryStates,
   type SingleParser,
   type UseQueryStateOptions,
+  useQueryState,
+  useQueryStates,
 } from "nuqs";
-import React from "react";
-import { useDebouncedCallback } from "./use-debounced-callback";
+import * as React from "react";
+
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { getFiltersStateParser, getSortingStateParser } from "@/lib/parsers";
+import type { ExtendedColumnSort, QueryKeys } from "@/types/data-table";
 
 const PAGE_KEY = "page";
 const PER_PAGE_KEY = "perPage";
@@ -42,15 +43,7 @@ const DEBOUNCE_MS = 300;
 const THROTTLE_MS = 50;
 
 interface UseDataTableProps<TData>
-  extends Omit<
-      TableOptions<TData>,
-      | "state"
-      | "pageCount"
-      | "getCoreRowModel"
-      | "manualFiltering"
-      | "manualPagination"
-      | "manualSorting"
-    >,
+  extends Omit<TableOptions<TData>, "state" | "pageCount" | "getCoreRowModel">,
     Required<Pick<TableOptions<TData>, "pageCount">> {
   initialState?: Omit<Partial<TableState>, "sorting"> & {
     sorting?: ExtendedColumnSort<TData>[];
@@ -79,6 +72,9 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     enableAdvancedFilter = false,
     scroll = false,
     shallow = true,
+    manualPagination = true,
+    manualSorting = true,
+    manualFiltering = true,
     startTransition,
     ...tableProps
   } = props;
@@ -230,9 +226,28 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       []
     );
   }, [filterValues, enableAdvancedFilter]);
+  const [advancedFilters] = useQueryState(
+    filtersKey,
+    getFiltersStateParser(columnIds)
+      .withOptions(queryStateOptions)
+      .withDefault([])
+  );
 
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(initialColumnFilters);
+
+  React.useEffect(() => {
+    if (!enableAdvancedFilter) return;
+
+    setColumnFilters(
+      advancedFilters.map((filter) => {
+        return {
+          id: filter.id,
+          value: filter.value,
+        };
+      })
+    );
+  }, [advancedFilters, enableAdvancedFilter]);
 
   const onColumnFiltersChange = React.useCallback(
     (updaterOrValue: Updater<ColumnFiltersState>) => {
@@ -280,8 +295,11 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     },
     defaultColumn: {
       ...tableProps.defaultColumn,
+      minSize: 50,
+      maxSize: 800,
       enableColumnFilter: false,
     },
+    columnResizeMode: "onChange",
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onPaginationChange,
@@ -295,9 +313,9 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    manualPagination: true,
-    manualSorting: true,
-    manualFiltering: true,
+    manualPagination,
+    manualSorting,
+    manualFiltering,
     meta: {
       ...tableProps.meta,
       queryKeys: {

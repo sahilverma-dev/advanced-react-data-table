@@ -1,4 +1,17 @@
-import type { Column } from "@tanstack/react-table";
+import type * as reactTable from "@tanstack/react-table";
+
+import {
+  BaselineIcon,
+  TextInitialIcon,
+  HashIcon,
+  LinkIcon,
+  CheckSquareIcon,
+  ListIcon,
+  ListChecksIcon,
+  CalendarIcon,
+  FileIcon,
+} from "lucide-react";
+
 import { dataTableConfig } from "@/config/data-table";
 import type {
   CellOpts,
@@ -6,51 +19,12 @@ import type {
   FilterOperator,
   FilterVariant,
 } from "@/types/data-table";
-import {
-  BaselineIcon,
-  CheckSquareIcon,
-  CalendarIcon,
-  FileIcon,
-  HashIcon,
-  LinkIcon,
-  ListIcon,
-  ListChecksIcon,
-  TextInitialIcon,
-} from "lucide-react";
-
-export function getColumnVariant(variant?: CellOpts["variant"]): {
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  label: string;
-} | null {
-  switch (variant) {
-    case "short-text":
-      return { label: "Short text", icon: BaselineIcon };
-    case "long-text":
-      return { label: "Long text", icon: TextInitialIcon };
-    case "number":
-      return { label: "Number", icon: HashIcon };
-    case "url":
-      return { label: "URL", icon: LinkIcon };
-    case "checkbox":
-      return { label: "Checkbox", icon: CheckSquareIcon };
-    case "select":
-      return { label: "Select", icon: ListIcon };
-    case "multi-select":
-      return { label: "Multi-select", icon: ListChecksIcon };
-    case "date":
-      return { label: "Date", icon: CalendarIcon };
-    case "file":
-      return { label: "File", icon: FileIcon };
-    default:
-      return null;
-  }
-}
 
 export function getCommonPinningStyles<TData>({
   column,
   withBorder = false,
 }: {
-  column: Column<TData>;
+  column: reactTable.Column<TData>;
   withBorder?: boolean;
 }): React.CSSProperties {
   const isPinned = column.getIsPinned();
@@ -114,4 +88,32 @@ export function getValidFilters<TData>(
           filter.value !== null &&
           filter.value !== undefined)
   );
+}
+
+export function getColumnVariant(variant?: CellOpts["variant"]): {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  label: string;
+} | null {
+  switch (variant) {
+    case "short-text":
+      return { label: "Short text", icon: BaselineIcon };
+    case "long-text":
+      return { label: "Long text", icon: TextInitialIcon };
+    case "number":
+      return { label: "Number", icon: HashIcon };
+    case "url":
+      return { label: "URL", icon: LinkIcon };
+    case "checkbox":
+      return { label: "Checkbox", icon: CheckSquareIcon };
+    case "select":
+      return { label: "Select", icon: ListIcon };
+    case "multi-select":
+      return { label: "Multi-select", icon: ListChecksIcon };
+    case "date":
+      return { label: "Date", icon: CalendarIcon };
+    case "file":
+      return { label: "File", icon: FileIcon };
+    default:
+      return null;
+  }
 }

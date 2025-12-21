@@ -1,4 +1,4 @@
-import ProductDataTable from "./components/product-table";
+import ProductDataTable from "./components/product-data-table";
 
 const App = () => {
   return (

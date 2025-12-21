@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
 import type * as React from "react";
 
@@ -12,13 +14,16 @@ import {
 } from "@/components/ui/table";
 import { getCommonPinningStyles } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
+import { DataTableColumnHeader } from "./data-table-column-header";
+import { Skeleton } from "../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { DataGridColumnHeader } from "./headers/data-table-column-header";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
-  height?: number | string;
+  isLoading?: boolean;
+  skeletonRows?: number;
+  height?: string | number;
 }
 
 export function DataTable<TData>({
@@ -26,81 +31,149 @@ export function DataTable<TData>({
   actionBar,
   children,
   className,
-  height = "calc(100vh - 200px)",
+  isLoading,
+  skeletonRows = 20,
+  height = 500,
   ...props
 }: DataTableProps<TData>) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { rows } = table.getRowModel();
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 40, // Height of a single row
+    overscan: 10,
+  });
+
+  const virtualRows = virtualizer.getVirtualItems();
+  const totalHeight = virtualizer.getTotalSize();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start ?? 0 : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalHeight - (virtualRows[virtualRows.length - 1]?.end ?? 0)
+      : 0;
+
   return (
-    <div
-      className={cn("flex w-full flex-col gap-2.5 overflow-auto", className)}
-      {...props}
-    >
+    <div className={cn("flex w-full flex-col gap-2.5 ", className)} {...props}>
       {children}
-      <ScrollArea style={{ height }} className="overflow-auto border">
-        <Table className="relative">
-          {/* sticky header with outline for bottom border */}
-          <TableHeader className="sticky top-0 z-10 outline outline-border">
+      <ScrollArea
+        className="overflow-auto relative rounded-md border"
+        style={{ height }}
+        viewportRef={scrollRef}
+      >
+        <Table className="relative w-full table-fixed overflow-x-visible">
+          <TableHeader className="sticky top-0 left-0 z-20  bg-background shadow-xs ">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className={cn("border-r p-0")}
+                    // className="relative bg-background border-s"
                     style={{
                       ...getCommonPinningStyles({ column: header.column }),
+                      width: header.getSize(),
                     }}
                   >
                     {header.isPlaceholder ? null : typeof header.column
                         .columnDef.header === "function" ? (
-                      <div className="size-full px-3 py-1.5">
+                      <div className="p-2">
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
                       </div>
                     ) : (
-                      <DataGridColumnHeader header={header} table={table} />
+                      <DataTableColumnHeader header={header} table={table} />
                     )}
                   </TableHead>
                 ))}
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
+
+          {/* BODY */}
+          {isLoading ? (
+            <TableBody>
+              {Array.from({ length: skeletonRows }).map((_, i) => (
+                <TableRow key={i}>
+                  {table.getAllColumns().map((col) => (
                     <TableCell
-                      key={cell.id}
-                      className="border-r border-b last:border-r-0"
+                      key={col.id}
+                      className="px-2"
                       style={{
-                        ...getCommonPinningStyles({ column: cell.column }),
+                        ...getCommonPinningStyles({ column: col }),
+                        width: col.getSize(),
                       }}
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      <Skeleton className="h-6 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getAllColumns().length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+              ))}
+            </TableBody>
+          ) : (
+            <TableBody>
+              {rows.length > 0 ? (
+                <>
+                  {paddingTop > 0 && (
+                    <TableRow>
+                      <TableCell style={{ height: `${paddingTop}px` }} />
+                    </TableRow>
+                  )}
+                  {virtualRows.map((virtualRow) => {
+                    const row = rows[virtualRow.index];
+                    return (
+                      <TableRow
+                        key={row.id}
+                        // data-index is important for dynamic row height virtualization if we upgrade
+                        data-index={virtualRow.index}
+                        // need to pass ref for dynamic measurement if needed, but fixed estimate is fine for now
+                        ref={virtualizer.measureElement}
+                        data-state={row.getIsSelected() && "selected"}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className="px-4 truncate"
+                            style={{
+                              ...getCommonPinningStyles({
+                                column: cell.column,
+                              }),
+                              width: cell.column.getSize(),
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+                  {paddingBottom > 0 && (
+                    <TableRow>
+                      <TableCell style={{ height: `${paddingBottom}px` }} />
+                    </TableRow>
+                  )}
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={table.getAllColumns().length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          )}
         </Table>
+
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="flex flex-col gap-2.5">
