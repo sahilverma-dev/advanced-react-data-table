@@ -47,7 +47,7 @@ export function DataTable<TData>({
                   >
                     {header.isPlaceholder ? null : typeof header.column
                         .columnDef.header === "function" ? (
-                      <div className="size-full px-3 py-1.5">
+                      <div className="p-2">
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
@@ -71,6 +71,7 @@ export function DataTable<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
+                      className="px-4"
                       style={{
                         ...getCommonPinningStyles({ column: cell.column }),
                       }}

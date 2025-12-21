@@ -8,6 +8,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-advanced-toolbar";
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
 import { DataTableFilterList } from "@/components/data-table/data-table-filter-list";
+import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 // import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 
 const categories: ProductCategory[] = [
@@ -137,8 +138,9 @@ const ProductDataTable = () => {
 
       {/* <DataTableToolbar table={table}>
         <DataTableSortList table={table} align="end" />
-      </DataTableToolbar> */}
+        </DataTableToolbar> */}
       <DataTableAdvancedToolbar table={table}>
+        <DataTableViewOptions table={table} />
         <DataTableSortList table={table} align="start" />
         <DataTableFilterList
           table={table}
