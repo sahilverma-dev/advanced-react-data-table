@@ -1,10 +1,12 @@
 "use client";
 
 import { DataTable } from "@/components/data-table/components/data-table";
+
 import { useDataTable } from "@/components/data-table/hooks/useDataTable";
+import { Checkbox } from "@/components/ui/checkbox";
 import { faker } from "@faker-js/faker";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 interface Product {
   id: string;
   name: string;
@@ -87,8 +89,32 @@ const ProductDataTable = () => {
   const products = useMemo(() => getProducts(200), []);
   const columns: ColumnDef<Product>[] = useMemo(
     () => [
-      // { accessorKey: "id", header: "ID" },
-      { accessorKey: "name", header: "Name" },
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
+      },
+      { accessorKey: "name", header: "Name", size: 200 },
       { accessorKey: "photo", header: "Photo" },
       { accessorKey: "rating", header: "Rating" },
       { accessorKey: "category", header: "Category" },
@@ -121,6 +147,8 @@ const ProductDataTable = () => {
     []
   );
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const { table } = useDataTable({
     data: products,
     columns,
@@ -130,7 +158,16 @@ const ProductDataTable = () => {
   //   const
   return (
     <div className="container mx-auto py-10">
-      <DataTable table={table} />
+      <DataTable table={table} isLoading={isLoading} />
+      {/* // remove this */}
+      <button
+        onClick={() => {
+          setIsLoading((s) => !s);
+        }}
+        type="button"
+      >
+        click
+      </button>
     </div>
   );
 };

@@ -286,6 +286,7 @@ export function useDataTable<TData, TValue>({
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
 
     // manual control
+
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,

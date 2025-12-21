@@ -13,11 +13,15 @@ import { getCommonPinningStyles } from "../lib/data-table";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./data-table-pagination";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
   height?: number | string;
+  isFetching?: boolean;
+  isLoading?: boolean;
+  skeletonRows?: number;
 }
 
 export function DataTable<TData>({
@@ -26,6 +30,9 @@ export function DataTable<TData>({
   children,
   className,
   height = 500,
+  isLoading = false,
+  // isFetching = false,
+  skeletonRows = 20,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -41,7 +48,10 @@ export function DataTable<TData>({
                     key={header.id}
                     colSpan={header.colSpan}
                     style={{
-                      ...getCommonPinningStyles({ column: header.column }),
+                      ...getCommonPinningStyles({
+                        column: header.column,
+                        withBorder: true,
+                      }),
                     }}
                   >
                     {header.isPlaceholder
@@ -55,39 +65,53 @@ export function DataTable<TData>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      style={{
-                        ...getCommonPinningStyles({ column: cell.column }),
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+          {isLoading ? (
+            <TableBody>
+              {Array.from({ length: skeletonRows }).map((_, i) => (
+                <TableRow key={i}>
+                  {table.getAllColumns().map((column) => (
+                    <TableCell key={column.id}>
+                      <Skeleton className="w-full min-w-5 h-5" />
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getAllColumns().length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+              ))}
+            </TableBody>
+          ) : (
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{
+                          ...getCommonPinningStyles({ column: cell.column }),
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={table.getAllColumns().length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          )}
         </Table>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
