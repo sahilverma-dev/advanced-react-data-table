@@ -1,49 +1,87 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Table } from "@tanstack/react-table";
+import * as XLSX from "xlsx";
 
 export function exportTableToCSV<TData>(
   table: Table<TData>,
-  opts: {
-    filename?: string;
-    excludeColumns?: (keyof TData | "select" | "actions")[];
-    onlySelected?: boolean;
-  } = {},
-): void {
-  const {
-    filename = "table",
-    excludeColumns = [],
+  {
+    filename = "export",
+    excludeColumns = ["select", "actions"],
     onlySelected = false,
-  } = opts;
+  }: {
+    filename?: string;
+    excludeColumns?: string[];
+    onlySelected?: boolean;
+  } = {}
+) {
+  const rows = onlySelected
+    ? table.getFilteredSelectedRowModel().rows
+    : table.getFilteredRowModel().rows;
 
-  const headers = table
-    .getAllLeafColumns()
-    .map((column) => column.id)
-    .filter((id) => !excludeColumns.includes(id));
+  const data = rows.map((row) => {
+    const rowData: Record<string, any> = {};
+    row.getVisibleCells().forEach((cell) => {
+      const column = cell.column;
+      if (excludeColumns.includes(column.id)) return;
 
-  const csvContent = [
-    headers.join(","),
-    ...(onlySelected
-      ? table.getFilteredSelectedRowModel().rows
-      : table.getRowModel().rows
-    ).map((row) =>
-      headers
-        .map((header) => {
-          const cellValue = row.getValue(header);
-          return typeof cellValue === "string"
-            ? `"${cellValue.replace(/"/g, '""')}"`
-            : cellValue;
-        })
-        .join(","),
-    ),
-  ].join("\n");
+      const header =
+        typeof column.columnDef.header === "function"
+          ? column.id
+          : (column.columnDef.header as string) || column.id;
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      rowData[header] = cell.getValue();
+    });
+    return rowData;
+  });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", `${filename}.csv`);
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+  XLSX.writeFile(workbook, `${filename}.csv`);
+}
+
+export function exportTableToXLSX<TData>(
+  table: Table<TData>,
+  {
+    filename = "export",
+    excludeColumns = ["select", "actions"],
+    onlySelected = false,
+  }: {
+    filename?: string;
+    excludeColumns?: string[];
+    onlySelected?: boolean;
+  } = {}
+) {
+  const rows = onlySelected
+    ? table.getFilteredSelectedRowModel().rows
+    : table.getFilteredRowModel().rows;
+
+  const data = rows.map((row) => {
+    const rowData: Record<string, any> = {};
+    row.getVisibleCells().forEach((cell) => {
+      const column = cell.column;
+      if (excludeColumns.includes(column.id)) return;
+
+      const header =
+        typeof column.columnDef.header === "function"
+          ? column.id
+          : (column.columnDef.header as string) || column.id;
+
+      rowData[header] = cell.getValue();
+    });
+    return rowData;
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+
+  // Auto-width for columns
+  const max_width = data.reduce(
+    (w, r) => Math.max(w, JSON.stringify(r).length),
+    10
+  );
+  worksheet["!cols"] = [{ wch: max_width }];
+
+  XLSX.writeFile(workbook, `${filename}.xlsx`);
 }

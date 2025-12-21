@@ -202,7 +202,7 @@ DataTableViewOptionsProps<TData>) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" className="ml-auto flex">
+        <Button variant="outline" size="icon" className="lex">
           <Settings2Icon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>

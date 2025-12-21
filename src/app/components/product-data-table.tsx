@@ -136,9 +136,10 @@ const ProductDataTable = () => {
     <>
       <DataTable
         table={table}
+        height={"calc(100vh - 200px)"}
         actionBar={<ProductTableActionBar table={table} />}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-end gap-2.5">
           <DataTableExportOptions table={table} />
           <DataTableSortList table={table} />
           <DataTableFilterList
