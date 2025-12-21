@@ -8,6 +8,7 @@ import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-adv
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
 import { DataTableFilterList } from "@/components/data-table/data-table-filter-list";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import { DataTableExportOptions } from "@/components/data-table/data-table-export-options";
 
 // import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 
@@ -143,6 +144,8 @@ const ProductDataTable = () => {
 
         <DataTableAdvancedToolbar table={table}>
           <DataTableViewOptions table={table} />
+
+          <DataTableExportOptions table={table} />
           <DataTableSortList table={table} align="start" />
           <DataTableFilterList
             table={table}
