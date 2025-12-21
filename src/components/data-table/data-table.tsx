@@ -14,11 +14,14 @@ import { getCommonPinningStyles } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { Skeleton } from "../ui/skeleton";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
   isLoading?: boolean;
+  skeletonRows?: number;
+  height?: string | number;
 }
 
 export function DataTable<TData>({
@@ -27,14 +30,19 @@ export function DataTable<TData>({
   children,
   className,
   isLoading,
+  skeletonRows = 20,
+  height = 500,
   ...props
 }: DataTableProps<TData>) {
   return (
     <div className={cn("flex w-full flex-col gap-2.5 ", className)} {...props}>
       {children}
-      <div className=" rounded-md border">
-        <Table>
-          <TableHeader>
+      <ScrollArea
+        className="overflow-auto relative rounded-md border"
+        style={{ height }}
+      >
+        <Table className="overflow-x-visible static">
+          <TableHeader className="sticky top-0 left-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -63,7 +71,7 @@ export function DataTable<TData>({
           </TableHeader>
           {isLoading ? (
             <TableBody>
-              {Array.from({ length: 20 }).map((_, i) => (
+              {Array.from({ length: skeletonRows }).map((_, i) => (
                 <TableRow key={i}>
                   {table.getAllColumns().map((col) => (
                     <TableCell
@@ -116,7 +124,8 @@ export function DataTable<TData>({
             </TableBody>
           )}
         </Table>
-      </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
       <div className="flex flex-col gap-2.5">
         <DataTablePagination table={table} />
         {actionBar &&
