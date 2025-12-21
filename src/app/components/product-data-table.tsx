@@ -111,7 +111,7 @@ const products = Array.from({ length: 100 }, () => generateProduct());
 const ProductDataTable = () => {
   const columns = useProductColumns();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { table, shallow, debounceMs, throttleMs } = useDataTable({
     data: products,

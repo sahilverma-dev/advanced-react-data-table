@@ -41,14 +41,15 @@ export function DataTable<TData>({
         className="overflow-auto relative rounded-md border"
         style={{ height }}
       >
-        <Table className="overflow-x-visible static">
-          <TableHeader className="sticky top-0 left-0 z-10">
+        <Table className="relative overflow-x-visible">
+          <TableHeader className="sticky top-0 left-0 z-20  bg-background shadow-xs ">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    // className="relative bg-background border-s"
                     style={{
                       ...getCommonPinningStyles({ column: header.column }),
                     }}
@@ -69,6 +70,8 @@ export function DataTable<TData>({
               </TableRow>
             ))}
           </TableHeader>
+
+          {/* BODY */}
           {isLoading ? (
             <TableBody>
               {Array.from({ length: skeletonRows }).map((_, i) => (
@@ -124,6 +127,7 @@ export function DataTable<TData>({
             </TableBody>
           )}
         </Table>
+
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="flex flex-col gap-2.5">
