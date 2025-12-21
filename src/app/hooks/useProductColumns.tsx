@@ -47,6 +47,8 @@ import {
   TooltipPanel,
   TooltipTrigger,
 } from "@/components/animate-ui/components/base/tooltip";
+import { Badge } from "@/components/ui/badge";
+import DataTableCheckboxCell from "@/components/data-table/cells/data-table-user-cell";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
@@ -138,6 +140,13 @@ export const useProductColumns = () => {
         },
         accessorKey: "category",
         header: "Category",
+        cell: ({ getValue }) => {
+          const value = getValue();
+
+          return value ? (
+            <Badge className="capitalize">{value as string}</Badge>
+          ) : null;
+        },
         size: 130,
       },
       {
@@ -151,6 +160,13 @@ export const useProductColumns = () => {
         accessorKey: "status",
         header: "Status",
         size: 130,
+        cell: ({ getValue }) => {
+          const value = getValue();
+
+          return value ? (
+            <Badge className="capitalize">{value as string}</Badge>
+          ) : null;
+        },
       },
 
       // Pricing
@@ -164,8 +180,12 @@ export const useProductColumns = () => {
         },
         accessorKey: "costPrice",
         header: "Cost",
-        size: 100,
-        cell: ({ getValue }) => `₹${getValue<number>().toFixed(2)}`,
+        size: 200,
+        cell: ({ getValue }) =>
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(getValue<number>()),
       },
       {
         enableColumnFilter: true,
@@ -178,7 +198,12 @@ export const useProductColumns = () => {
         accessorKey: "retailPrice",
         header: "Retail",
         size: 100,
-        cell: ({ getValue }) => `₹${getValue<number>().toFixed(2)}`,
+
+        cell: ({ getValue }) =>
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(getValue<number>()),
       },
       {
         enableColumnFilter: true,
@@ -204,9 +229,12 @@ export const useProductColumns = () => {
         accessorKey: "finalPrice",
         header: "Final Price",
         size: 120,
-        cell: ({ getValue }) => (
-          <strong>₹{getValue<number>().toFixed(2)}</strong>
-        ),
+
+        cell: ({ getValue }) =>
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(getValue<number>()),
       },
       {
         enableColumnFilter: true,
@@ -219,6 +247,13 @@ export const useProductColumns = () => {
         accessorKey: "currency",
         header: "Currency",
         size: 90,
+        cell: ({ getValue }) => {
+          const value = getValue();
+
+          return value ? (
+            <Badge className="capitalize">{value as string}</Badge>
+          ) : null;
+        },
       },
 
       // Inventory
@@ -422,7 +457,10 @@ export const useProductColumns = () => {
         accessorKey: "isFeatured",
         header: "Featured",
         size: 100,
-        cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
+        // cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
+        cell: ({ getValue }) => (
+          <DataTableCheckboxCell checked={getValue<boolean>()} />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -435,7 +473,10 @@ export const useProductColumns = () => {
         accessorKey: "isReturnable",
         header: "Returnable",
         size: 110,
-        cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
+        // cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
+        cell: ({ getValue }) => (
+          <DataTableCheckboxCell checked={getValue<boolean>()} />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -448,7 +489,10 @@ export const useProductColumns = () => {
         accessorKey: "isTaxable",
         header: "Taxable",
         size: 100,
-        cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
+        // cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
+        cell: ({ getValue }) => (
+          <DataTableCheckboxCell checked={getValue<boolean>()} />
+        ),
       },
 
       // Dates
