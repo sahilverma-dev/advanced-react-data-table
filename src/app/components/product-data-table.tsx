@@ -1,4 +1,3 @@
-// product.faker.ts
 import { faker } from "@faker-js/faker";
 import type { Product, ProductCategory, ProductStatus } from "../types/product";
 
@@ -9,6 +8,7 @@ import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-adv
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
 import { DataTableFilterList } from "@/components/data-table/data-table-filter-list";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import { useState } from "react";
 // import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 
 const categories: ProductCategory[] = [
@@ -111,6 +111,8 @@ const products = Array.from({ length: 100 }, () => generateProduct());
 const ProductDataTable = () => {
   const columns = useProductColumns();
 
+  const [isLoading, setIsLoading] = useState(true);
+
   const { table, shallow, debounceMs, throttleMs } = useDataTable({
     data: products,
     columns,
@@ -133,24 +135,35 @@ const ProductDataTable = () => {
   });
 
   return (
-    <DataTable table={table}>
-      {/* <DataTableToolbar table={table} /> */}
+    <>
+      <DataTable isLoading={isLoading} table={table}>
+        {/* <DataTableToolbar table={table} /> */}
 
-      {/* <DataTableToolbar table={table}>
+        {/* <DataTableToolbar table={table}>
         <DataTableSortList table={table} align="end" />
         </DataTableToolbar> */}
-      <DataTableAdvancedToolbar table={table}>
-        <DataTableViewOptions table={table} />
-        <DataTableSortList table={table} align="start" />
-        <DataTableFilterList
-          table={table}
-          shallow={shallow}
-          debounceMs={debounceMs}
-          throttleMs={throttleMs}
-          align="start"
-        />
-      </DataTableAdvancedToolbar>
-    </DataTable>
+        {/* // remove this */}
+        <button
+          onClick={() => {
+            setIsLoading((s) => !s);
+          }}
+          type="button"
+        >
+          click
+        </button>
+        <DataTableAdvancedToolbar table={table}>
+          <DataTableViewOptions table={table} />
+          <DataTableSortList table={table} align="start" />
+          <DataTableFilterList
+            table={table}
+            shallow={shallow}
+            debounceMs={debounceMs}
+            throttleMs={throttleMs}
+            align="start"
+          />
+        </DataTableAdvancedToolbar>
+      </DataTable>
+    </>
   );
 };
 
