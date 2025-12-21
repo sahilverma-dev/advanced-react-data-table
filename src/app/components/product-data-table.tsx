@@ -4,13 +4,11 @@ import type { Product, ProductCategory, ProductStatus } from "../types/product";
 import { useProductColumns } from "../hooks/useProductColumns";
 import { useDataTable } from "@/hooks/use-data-table";
 import { DataTable } from "@/components/data-table/data-table";
-import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-advanced-toolbar";
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
 import { DataTableFilterList } from "@/components/data-table/data-table-filter-list";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
-import { DataTableExportOptions } from "@/components/data-table/data-table-export-options";
 
-// import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { DataTableExportOptions } from "@/components/data-table/data-table-export-options";
+import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 
 const categories: ProductCategory[] = [
   "electronics",
@@ -136,25 +134,17 @@ const ProductDataTable = () => {
   return (
     <>
       <DataTable table={table}>
-        {/* <DataTableToolbar table={table} /> */}
-
-        {/* <DataTableToolbar table={table}>
-        <DataTableSortList table={table} align="end" />
-        </DataTableToolbar> */}
-
-        <DataTableAdvancedToolbar table={table}>
-          <DataTableViewOptions table={table} />
-
+        <div className="flex items-center gap-2.5">
           <DataTableExportOptions table={table} />
-          <DataTableSortList table={table} align="start" />
+          <DataTableSortList table={table} />
           <DataTableFilterList
             table={table}
             shallow={shallow}
             debounceMs={debounceMs}
             throttleMs={throttleMs}
-            align="start"
           />
-        </DataTableAdvancedToolbar>
+          <DataTableViewOptions table={table} align="end" />
+        </div>
       </DataTable>
     </>
   );

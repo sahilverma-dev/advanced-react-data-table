@@ -42,6 +42,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipPanel,
+  TooltipTrigger,
+} from "@/components/animate-ui/components/base/tooltip";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
@@ -84,9 +89,7 @@ export const useProductColumns = () => {
         },
         accessorKey: "name",
         header: "Name",
-        // header: ({ column, table }) => (
-        //   <DataTableColumnHeader table={table} column={column} label="Name" />
-        // ),
+
         size: 220,
       },
       {
@@ -460,7 +463,25 @@ export const useProductColumns = () => {
         accessorKey: "launchDate",
         header: "Launch Date",
         size: 140,
-        cell: ({ getValue }) => new Date(getValue<Date>()).toLocaleDateString(),
+        cell: ({ getValue }) => {
+          const dateValue = getValue<string | Date>();
+          if (!dateValue) return null;
+
+          const date = new Date(dateValue);
+          const formattedDate = date.toLocaleDateString();
+          const fullDate = new Intl.DateTimeFormat("en-US", {
+            dateStyle: "full",
+          }).format(date);
+
+          return (
+            <Tooltip>
+              <TooltipTrigger>{formattedDate}</TooltipTrigger>
+              <TooltipPanel>
+                <p>{fullDate}</p>
+              </TooltipPanel>
+            </Tooltip>
+          );
+        },
       },
       {
         enableColumnFilter: true,
