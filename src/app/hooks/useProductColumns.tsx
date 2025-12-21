@@ -545,14 +545,14 @@ export const useProductColumns = () => {
         },
         accessorKey: "notes",
         header: "Notes",
-        size: 260,
+
         cell: ({ getValue }) => getValue<string | null>() ?? "—",
       },
       {
         enableColumnFilter: false,
         accessorKey: "actions",
         header: "Actions",
-        size: 260,
+
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

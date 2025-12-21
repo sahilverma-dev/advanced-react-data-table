@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
 import type * as React from "react";
 
@@ -34,14 +36,34 @@ export function DataTable<TData>({
   height = 500,
   ...props
 }: DataTableProps<TData>) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { rows } = table.getRowModel();
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 40, // Height of a single row
+    overscan: 10,
+  });
+
+  const virtualRows = virtualizer.getVirtualItems();
+  const totalHeight = virtualizer.getTotalSize();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start ?? 0 : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalHeight - (virtualRows[virtualRows.length - 1]?.end ?? 0)
+      : 0;
+
   return (
     <div className={cn("flex w-full flex-col gap-2.5 ", className)} {...props}>
       {children}
       <ScrollArea
         className="overflow-auto relative rounded-md border"
         style={{ height }}
+        viewportRef={scrollRef}
       >
-        <Table className="relative overflow-x-visible">
+        <Table className="relative w-full table-fixed overflow-x-visible">
           <TableHeader className="sticky top-0 left-0 z-20  bg-background shadow-xs ">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="">
@@ -52,6 +74,7 @@ export function DataTable<TData>({
                     // className="relative bg-background border-s"
                     style={{
                       ...getCommonPinningStyles({ column: header.column }),
+                      width: header.getSize(),
                     }}
                   >
                     {header.isPlaceholder ? null : typeof header.column
@@ -82,6 +105,7 @@ export function DataTable<TData>({
                       className="px-2"
                       style={{
                         ...getCommonPinningStyles({ column: col }),
+                        width: col.getSize(),
                       }}
                     >
                       <Skeleton className="h-6 w-full" />
@@ -92,28 +116,50 @@ export function DataTable<TData>({
             </TableBody>
           ) : (
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="px-4"
-                        style={{
-                          ...getCommonPinningStyles({ column: cell.column }),
-                        }}
+              {rows.length > 0 ? (
+                <>
+                  {paddingTop > 0 && (
+                    <TableRow>
+                      <TableCell style={{ height: `${paddingTop}px` }} />
+                    </TableRow>
+                  )}
+                  {virtualRows.map((virtualRow) => {
+                    const row = rows[virtualRow.index];
+                    return (
+                      <TableRow
+                        key={row.id}
+                        // data-index is important for dynamic row height virtualization if we upgrade
+                        data-index={virtualRow.index}
+                        // need to pass ref for dynamic measurement if needed, but fixed estimate is fine for now
+                        ref={virtualizer.measureElement}
+                        data-state={row.getIsSelected() && "selected"}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className="px-4 truncate"
+                            style={{
+                              ...getCommonPinningStyles({
+                                column: cell.column,
+                              }),
+                              width: cell.column.getSize(),
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+                  {paddingBottom > 0 && (
+                    <TableRow>
+                      <TableCell style={{ height: `${paddingBottom}px` }} />
+                    </TableRow>
+                  )}
+                </>
               ) : (
                 <TableRow>
                   <TableCell
