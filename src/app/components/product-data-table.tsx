@@ -9,6 +9,7 @@ import { DataTableFilterList } from "@/components/data-table/data-table-filter-l
 
 import { DataTableExportOptions } from "@/components/data-table/data-table-export-options";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import ProductTableActionBar from "./product-data-table-action-bar";
 
 const categories: ProductCategory[] = [
   "electronics",
@@ -133,7 +134,10 @@ const ProductDataTable = () => {
 
   return (
     <>
-      <DataTable table={table}>
+      <DataTable
+        table={table}
+        actionBar={<ProductTableActionBar table={table} />}
+      >
         <div className="flex items-center gap-2.5">
           <DataTableExportOptions table={table} />
           <DataTableSortList table={table} />
