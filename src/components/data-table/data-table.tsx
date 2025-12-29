@@ -82,7 +82,7 @@ export function DataTable<TData>({
         viewportRef={scrollRef}
       >
         <Table className="relative w-full border-collapse table-fixed overflow-x-visible">
-          <TableHeader className="sticky top-0 left-0 z-20  bg-background shadow-xs ">
+          <TableHeader className="sticky top-0 left-0 z-20 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="">
                 {headerGroup.headers.map((header) => (
@@ -90,7 +90,7 @@ export function DataTable<TData>({
                     key={header.id}
                     colSpan={header.colSpan}
                     className={cn(
-                      "border-b",
+                      "border-b border-r last:border-r-0",
                       getPinnedClasses(header.column, true)
                     )}
                     style={{
@@ -123,7 +123,10 @@ export function DataTable<TData>({
                   {table.getAllColumns().map((col) => (
                     <TableCell
                       key={col.id}
-                      className={cn("px-2", getPinnedClasses(col))}
+                      className={cn(
+                        "px-2 border-r last:border-r-0",
+                        getPinnedClasses(col)
+                      )}
                       style={{
                         ...getCommonPinningStyles({ column: col }),
                         width: col.getSize(),
@@ -164,6 +167,7 @@ export function DataTable<TData>({
                                 "long-text"
                                 ? "whitespace-normal wrap-break-word"
                                 : "truncate",
+                              "border-r last:border-r-0",
                               getPinnedClasses(cell.column)
                             )}
                             style={{
