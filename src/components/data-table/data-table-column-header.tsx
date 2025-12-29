@@ -1,5 +1,11 @@
 "use client";
 
+import { useQueryState } from "nuqs";
+import { getFiltersStateParser } from "@/lib/parsers";
+import { DataTableFilterInput } from "@/components/data-table/data-table-filter-input";
+import { getDefaultFilterOperator } from "@/lib/data-table";
+import { generateId } from "@/lib/id";
+import type { ExtendedColumnFilter } from "@/types/data-table";
 import type {
   ColumnSort,
   Header,
@@ -32,20 +38,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckIcon } from "lucide-react";
+
 import { getColumnVariant } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
 
@@ -198,7 +191,7 @@ export function DataTableColumnHeader<TData, TValue>({
         <DropdownMenuContent align="start" sideOffset={0} className="w-60">
           {column.getCanFilter() && (
             <>
-              <DataTableColumnFilter header={header} />
+              <DataTableColumnFilter header={header} table={table} />
               {column.getCanSort() && <DropdownMenuSeparator />}
             </>
           )}
@@ -297,374 +290,128 @@ export function DataTableColumnHeader<TData, TValue>({
   );
 }
 
-// Helpers for Number/Slider Filter
-interface Range {
-  min: number;
-  max: number;
-}
-type RangeValue = [number, number];
-
-function getIsValidRange(value: unknown): value is RangeValue {
-  return (
-    Array.isArray(value) &&
-    value.length === 2 &&
-    typeof value[0] === "number" &&
-    typeof value[1] === "number"
-  );
-}
-
-function parseValuesAsNumbers(value: unknown): RangeValue | undefined {
-  if (
-    Array.isArray(value) &&
-    value.length === 2 &&
-    value.every(
-      (v) =>
-        (typeof v === "string" || typeof v === "number") && !Number.isNaN(v)
-    )
-  ) {
-    return [Number(value[0]), Number(value[1])];
-  }
-  return undefined;
-}
-
 function DataTableColumnFilter<TData, TValue>({
   header,
+  table,
 }: {
   header: Header<TData, TValue>;
+  table: Table<TData>;
 }) {
   const column = header.column;
-  const variant = column.columnDef.meta?.variant ?? "text";
-  const [value, setValue] = React.useState(column.getFilterValue());
+  const columnMeta = column.columnDef.meta;
+  const variant = columnMeta?.variant ?? "text";
 
-  // Sync state with column filter value
-  const filterValue = column.getFilterValue();
+  const [filters, setFilters] = useQueryState(
+    table.options.meta?.queryKeys?.filters ?? "filters",
+    getFiltersStateParser<TData>(
+      table
+        .getAllColumns()
+        .filter((column) => column.columnDef.enableColumnFilter)
+        .map((column) => column.id)
+    )
+      .withDefault([])
+      .withOptions({
+        shallow: false,
+        throttleMs: 1000,
+      })
+  );
+
+  const filter = React.useMemo(() => {
+    return (
+      filters.find((f) => f.id === column.id) ??
+      ({
+        id: column.id as Extract<keyof TData, string>,
+        value: "",
+        variant: variant,
+        operator: getDefaultFilterOperator(variant),
+        filterId: generateId({ length: 8 }),
+      } as ExtendedColumnFilter<TData>)
+    );
+  }, [filters, column.id, variant]);
+
+  const [value, setValue] = React.useState(filter.value);
+  const [showValueSelector, setShowValueSelector] = React.useState(false);
+
+  // Sync state with global filters
   React.useEffect(() => {
-    setValue(filterValue);
-  }, [filterValue]);
+    setValue(filter.value);
+  }, [filter.value]);
 
-  const handleFilterChange = (val: unknown) => {
-    setValue(val);
-    column.setFilterValue(val);
-  };
+  const onFilterUpdate = React.useCallback(
+    (
+      filterId: string,
+      updates: Partial<Omit<ExtendedColumnFilter<TData>, "filterId">>
+    ) => {
+      setFilters((prev) => {
+        const existingIndex = prev.findIndex((f) => f.id === column.id);
 
-  // --- Number / Range / Slider Logic ---
-  const isNumberVariant = variant === "number" || variant === "range";
-  const id = React.useId();
-  const defaultRange = column.columnDef.meta?.range;
-  const unit = column.columnDef.meta?.unit;
-
-  // Memoize min/max/step calculation
-  const { min, max, step } = React.useMemo<Range & { step: number }>(() => {
-    if (!isNumberVariant) return { min: 0, max: 100, step: 1 };
-
-    let minValue = 0;
-    let maxValue = 100;
-
-    if (defaultRange && getIsValidRange(defaultRange)) {
-      [minValue, maxValue] = defaultRange;
-    } else {
-      const values = column.getFacetedMinMaxValues();
-      if (values && Array.isArray(values) && values.length === 2) {
-        const [facetMinValue, facetMaxValue] = values;
-        if (
-          typeof facetMinValue === "number" &&
-          typeof facetMaxValue === "number"
-        ) {
-          minValue = facetMinValue;
-          maxValue = facetMaxValue;
+        if (existingIndex > -1) {
+          // Update existing
+          const newFilters = [...prev];
+          // If value is empty or undefined, remove the filter
+          if (
+            updates.value === undefined ||
+            updates.value === "" ||
+            (Array.isArray(updates.value) && updates.value.length === 0)
+          ) {
+            newFilters.splice(existingIndex, 1);
+            return newFilters;
+          }
+          newFilters[existingIndex] = { ...prev[existingIndex], ...updates };
+          return newFilters;
+        } else {
+          // Add new
+          // If value is empty, don't add
+          if (
+            updates.value === undefined ||
+            updates.value === "" ||
+            (Array.isArray(updates.value) && updates.value.length === 0)
+          ) {
+            return prev;
+          }
+          return [...prev, { ...filter, ...updates }];
         }
-      }
-    }
+      });
+    },
+    [column.id, filter, setFilters]
+  );
 
-    const rangeSize = maxValue - minValue;
-    const step =
-      rangeSize <= 20
-        ? 1
-        : rangeSize <= 100
-        ? Math.ceil(rangeSize / 20)
-        : Math.ceil(rangeSize / 50);
+  // Custom Reset Handler to force remove from global state
+  const onReset = React.useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setFilters((prev) => prev.filter((f) => f.id !== column.id));
+    },
+    [column.id, setFilters]
+  );
 
-    return { min: minValue, max: maxValue, step };
-  }, [column, defaultRange, isNumberVariant]);
-
-  const rangeValue = React.useMemo((): RangeValue => {
-    return (parseValuesAsNumbers(filterValue) ?? [min, max]) as RangeValue;
-  }, [filterValue, min, max]);
-
-  if (isNumberVariant) {
-    const onFromInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const numValue = Number(event.target.value);
-      if (
-        !Number.isNaN(numValue) &&
-        numValue >= min &&
-        numValue <= rangeValue[1]
-      ) {
-        handleFilterChange([numValue, rangeValue[1]]);
-      }
-    };
-
-    const onToInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const numValue = Number(event.target.value);
-      if (
-        !Number.isNaN(numValue) &&
-        numValue <= max &&
-        numValue >= rangeValue[0]
-      ) {
-        handleFilterChange([rangeValue[0], numValue]);
-      }
-    };
-
-    const onSliderValueChange = (val: number[]) => {
-      if (Array.isArray(val) && val.length === 2) {
-        handleFilterChange(val);
-      }
-    };
-
-    return (
-      <div className="p-2 space-y-4">
-        <div className="flex items-center gap-4">
-          <Label htmlFor={`${id}-from`} className="sr-only">
-            From
-          </Label>
-          <div className="relative">
-            <Input
-              id={`${id}-from`}
-              type="number"
-              inputMode="numeric"
-              min={min}
-              max={max}
-              value={rangeValue[0]}
-              onChange={onFromInputChange}
-              className={cn("h-8 w-24", unit && "pr-8")}
-            />
-            {unit && (
-              <span className="absolute top-0 right-0 bottom-0 flex items-center rounded-r-md bg-accent px-2 text-muted-foreground text-sm">
-                {unit}
-              </span>
-            )}
-          </div>
-          <Label htmlFor={`${id}-to`} className="sr-only">
-            To
-          </Label>
-          <div className="relative">
-            <Input
-              id={`${id}-to`}
-              type="number"
-              inputMode="numeric"
-              min={min}
-              max={max}
-              value={rangeValue[1]}
-              onChange={onToInputChange}
-              className={cn("h-8 w-24", unit && "pr-8")}
-            />
-            {unit && (
-              <span className="absolute top-0 right-0 bottom-0 flex items-center rounded-r-md bg-accent px-2 text-muted-foreground text-sm">
-                {unit}
-              </span>
-            )}
-          </div>
-        </div>
-        <Slider
-          id={`${id}-slider`}
-          min={min}
-          max={max}
-          step={step}
-          value={rangeValue}
-          onValueChange={onSliderValueChange}
-        />
-        <div className="flex justify-end">
-          <button
-            className="text-xs text-muted-foreground hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFilterChange(undefined);
-            }}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Date Range / Date Logic ---
-  if (variant === "dateRange" || variant === "date") {
-    return (
-      <div className="p-2 space-y-2">
-        <Tabs
-          defaultValue={variant === "date" ? "single" : "range"}
-          className="w-[250px]"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="single">Single</TabsTrigger>
-            <TabsTrigger value="range">Range</TabsTrigger>
-          </TabsList>
-          <TabsContent value="single" className="mt-2">
-            <Calendar
-              mode="single"
-              initialFocus
-              selected={
-                Array.isArray(value) && value[0]
-                  ? new Date(value[0])
-                  : undefined
-              }
-              onSelect={(val) => {
-                if (val) {
-                  const iso = val.toISOString();
-                  handleFilterChange([iso, iso]);
-                } else {
-                  handleFilterChange(undefined);
-                }
-              }}
-            />
-          </TabsContent>
-          <TabsContent value="range" className="mt-2">
-            <Calendar
-              mode="range"
-              selected={
-                Array.isArray(value) && value.length === 2
-                  ? {
-                      from: value[0] ? new Date(value[0]) : undefined,
-                      to: value[1] ? new Date(value[1]) : undefined,
-                    }
-                  : undefined
-              }
-              onSelect={(val) => {
-                if (val) {
-                  const dateRange = val as { from?: Date; to?: Date };
-                  const newValue = [
-                    dateRange.from?.toISOString() ?? "",
-                    dateRange.to?.toISOString() ?? "",
-                  ];
-                  if (!newValue[0] && !newValue[1]) {
-                    handleFilterChange(undefined);
-                  } else {
-                    handleFilterChange(newValue);
-                  }
-                } else {
-                  handleFilterChange(undefined);
-                }
-              }}
-              numberOfMonths={2}
-            />
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-end">
-          <button
-            className="text-xs text-muted-foreground hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFilterChange(undefined);
-            }}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Multi-select / Select / Boolean (Faceted) Logic ---
-  const options = column.columnDef.meta?.options ?? [];
-  const isMulti = variant === "multiSelect";
-
-  // Use Command list for select/multiselect
-  if (options.length > 0) {
-    return (
-      <div className="w-full group">
-        <Command>
-          <CommandInput placeholder="Search..." autoFocus />
-          <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup className="max-h-[300px] overflow-y-auto">
-              {options.map((option) => {
-                const isSelected = isMulti
-                  ? Array.isArray(value) &&
-                    (value as string[]).includes(option.value)
-                  : value === option.value;
-
-                return (
-                  <CommandItem
-                    key={option.value}
-                    onSelect={() => {
-                      if (isMulti) {
-                        const current = Array.isArray(value)
-                          ? (value as string[])
-                          : [];
-                        const next = current.includes(option.value)
-                          ? current.filter((v) => v !== option.value)
-                          : [...current, option.value];
-
-                        handleFilterChange(next.length ? next : undefined);
-                      } else {
-                        handleFilterChange(
-                          value === option.value ? undefined : option.value
-                        );
-                      }
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible"
-                      )}
-                    >
-                      <CheckIcon className={cn("h-4 w-4")} />
-                    </div>
-                    {option.icon && (
-                      <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="truncate">{option.label}</span>
-                    {option.count && (
-                      <span className="ml-auto font-mono text-xs">
-                        {option.count}
-                      </span>
-                    )}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-            {!!value && (
-              <>
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => handleFilterChange(undefined)}
-                    className="justify-center text-center font-medium text-muted-foreground"
-                  >
-                    Reset filters
-                  </CommandItem>
-                </CommandGroup>
-              </>
-            )}
-          </CommandList>
-        </Command>
-      </div>
-    );
-  }
-
-  // --- Default Text Filter ---
   return (
     <div className="p-2 space-y-2">
-      <Input
-        placeholder={`Search ${
-          column.columnDef.meta?.label?.toLowerCase() ?? "values"
-        }...`}
-        value={(value as string) ?? ""}
-        onChange={(e) => handleFilterChange(e.target.value)}
-        className="h-8"
-        autoFocus
+      <DataTableFilterInput
+        filter={{ ...filter, value }} // Pass local value for immediate feedback if needed, but we rely on nuqs mainly. Actually for inputs we might want controlled local state? `DataTableFilterInput` uses the value from filter prop.
+        // `DataTableFilterInput` calls `onFilterUpdate`.
+        // If we want immediate feedback in input, we might need to rely on `filters` update or local state.
+        // `nuqs` update might be debounced or async.
+        // Let's pass the computed `filter` which derives from `filters` state.
+        // But `filters` is from `useQueryState`.
+        // `DataTableFilterInput` in `data-table-filter-list` was using `filters` from `useQueryState` which was debounced in the list component.
+        // `useQueryState` returns the current state. `setFilters` updates it.
+        // IF we want valid input behavior, `onFilterUpdate` should probably update `filters` immediately?
+        // `getFiltersStateParser` options in `DataTableFilterList` had `throttleMs`.
+        // Here I used `throttleMs: 1000`.
+
+        inputId={`header-filter-${column.id}`}
+        column={column}
+        columnMeta={columnMeta}
+        onFilterUpdate={onFilterUpdate}
+        showValueSelector={showValueSelector}
+        setShowValueSelector={setShowValueSelector}
       />
-      {!!value && (
+      {!!filter.value && (
         <div className="flex justify-end">
           <button
             className="text-xs text-destructive hover:text-destructive/50"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFilterChange(undefined);
-            }}
+            onClick={onReset}
           >
             Reset
           </button>
