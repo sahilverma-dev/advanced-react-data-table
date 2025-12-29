@@ -158,35 +158,37 @@ export function DataTableColumnHeader<TData, TValue>({
     <div className={cn("flex group items-center gap-2 w-full", className)}>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 w-full text-left justify-between items-center data-[state=open]:bg-accent",
-              isAnyColumnResizing && "pointer-events-none"
-            )}
-            onPointerDown={onTriggerPointerDown}
-            {...props}
-          >
-            {columnVariant && (
-              <Tooltip delayDuration={100}>
-                <TooltipTrigger asChild>
-                  <columnVariant.icon className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>{columnVariant.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <span className="truncate">{label}</span>
-            {column.getIsSorted() === "desc" ? (
-              <ChevronDownIcon className="ml-2 h-4 w-4" />
-            ) : column.getIsSorted() === "asc" ? (
-              <ChevronUpIcon className="ml-2 h-4 w-4" />
-            ) : (
-              <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
+          <span className="block w-full pl-3 -ml-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                " h-8 w-full text-left justify-between items-center data-[state=open]:bg-accent",
+                isAnyColumnResizing && "pointer-events-none"
+              )}
+              onPointerDown={onTriggerPointerDown}
+              {...props}
+            >
+              {columnVariant && (
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <columnVariant.icon className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>{columnVariant.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <span className="truncate">{label}</span>
+              {column.getIsSorted() === "desc" ? (
+                <ChevronDownIcon className="ml-2 h-4 w-4" />
+              ) : column.getIsSorted() === "asc" ? (
+                <ChevronUpIcon className="ml-2 h-4 w-4" />
+              ) : (
+                <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
+              )}
+            </Button>
+          </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={0} className="w-60">
           {column.getCanFilter() && (
@@ -466,7 +468,7 @@ function DataTableColumnResizerImpl<TData, TValue>({
       aria-valuemax={defaultColumnDef.maxSize}
       tabIndex={0}
       className={cn(
-        "h-10 w-0.5 cursor-ew-resize touch-none select-none bg-primary transition-opacity after:absolute after:inset-y-0 after:start-1/2 after:h-full after:w-[18px] after:content-[''] hover:bg-primary focus:bg-primary focus:outline-none",
+        "h-10 w-0.5 cursor-ew-resize absolute right-0 top-0 z-50 touch-none select-none bg-primary duration-200 transition-opacity hover:bg-primary focus:bg-primary focus:outline-none",
         header.column.getIsResizing()
           ? "bg-primary"
           : "opacity-0 group-hover:opacity-100"
