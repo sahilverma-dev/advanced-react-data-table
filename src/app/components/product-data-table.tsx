@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { faker } from "@faker-js/faker";
 import type { Product, ProductCategory, ProductStatus } from "../types/product";
 
@@ -13,7 +14,9 @@ import { DataTableViewOptions } from "@/components/data-table/data-table-view-op
 import ProductTableActionBar from "./product-data-table-action-bar";
 import { Input } from "@/components/ui/input";
 
-const categories: ProductCategory[] = [
+import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-menu";
+
+export const categories: ProductCategory[] = [
   "electronics",
   "fashion",
   "grocery",
@@ -153,6 +156,7 @@ const ProductDataTable = () => {
               onChange={(event) => table.setGlobalFilter(event.target.value)}
               className="h-8 w-[150px] lg:w-[250px]"
             />
+            <DataTableFilterMenu table={table} />
           </div>
           <div className="flex item-center gap-2">
             <DataTableExportOptions table={table} />

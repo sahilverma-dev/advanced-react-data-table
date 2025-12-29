@@ -43,15 +43,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Tooltip,
-  TooltipPanel,
-  TooltipTrigger,
-} from "@/components/animate-ui/components/base/tooltip";
 import { Badge } from "@/components/ui/badge";
-import DataTableCheckboxCell from "@/components/data-table/cells/data-table-user-cell";
 import { DataTableHighlightCell } from "@/components/data-table/data-table-highlight-cell";
 import { DataTableOwnerCell } from "@/components/data-table/data-table-owner-cell";
+import { DataTableTagsCell } from "@/components/data-table/cells/data-table-tags-cell";
+import { DataTableDateCell } from "@/components/data-table/cells/data-table-date-cell";
+import { DataTableBooleanCell } from "@/components/data-table/cells/data-table-boolean-cell";
+import { categories } from "../components/product-data-table";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
@@ -148,13 +146,16 @@ export const useProductColumns = () => {
         ),
       },
       {
-        enableColumnFilter: true,
         meta: {
           label: "Category",
-          placeholder: "Search category...",
-          variant: "text",
+          variant: "multiSelect",
+          options: categories.map((category) => ({
+            label: category.charAt(0).toUpperCase() + category.slice(1),
+            value: category,
+          })),
           icon: Folder,
         },
+        enableColumnFilter: true,
         accessorKey: "category",
         header: "Category",
         cell: ({ getValue, table }) => {
@@ -502,7 +503,7 @@ export const useProductColumns = () => {
         size: 100,
         // cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
         cell: ({ getValue }) => (
-          <DataTableCheckboxCell checked={getValue<boolean>()} />
+          <DataTableBooleanCell value={getValue<boolean>()} />
         ),
       },
       {
@@ -518,7 +519,7 @@ export const useProductColumns = () => {
         size: 110,
         // cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
         cell: ({ getValue }) => (
-          <DataTableCheckboxCell checked={getValue<boolean>()} />
+          <DataTableBooleanCell value={getValue<boolean>()} />
         ),
       },
       {
@@ -534,7 +535,7 @@ export const useProductColumns = () => {
         size: 100,
         // cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
         cell: ({ getValue }) => (
-          <DataTableCheckboxCell checked={getValue<boolean>()} />
+          <DataTableBooleanCell value={getValue<boolean>()} />
         ),
       },
 
@@ -544,89 +545,66 @@ export const useProductColumns = () => {
         meta: {
           label: "Launch Date",
           placeholder: "Filter launch...",
-          variant: "date",
+          variant: "dateRange",
           icon: Calendar,
         },
+
         accessorKey: "launchDate",
         header: "Launch Date",
         size: 140,
-        cell: ({ getValue }) => {
-          const dateValue = getValue<string | Date>();
-          if (!dateValue) return null;
-
-          const date = new Date(dateValue);
-          const formattedDate = date.toLocaleDateString();
-          const fullDate = new Intl.DateTimeFormat("en-US", {
-            dateStyle: "full",
-          }).format(date);
-
-          return (
-            <Tooltip>
-              <TooltipTrigger>{formattedDate}</TooltipTrigger>
-              <TooltipPanel>
-                <p>{fullDate}</p>
-              </TooltipPanel>
-            </Tooltip>
-          );
-        },
+        cell: ({ getValue }) => <DataTableDateCell value={getValue<Date>()} />,
       },
       {
         enableColumnFilter: true,
         meta: {
           label: "Restocked At",
           placeholder: "Filter restocked...",
-          variant: "date",
+          variant: "dateRange",
           icon: Calendar,
         },
         accessorKey: "lastRestockedAt",
         header: "Restocked At",
         size: 150,
-        cell: ({ getValue }) =>
-          getValue<Date | null>()
-            ? new Date(getValue<Date>()).toLocaleDateString()
-            : "—",
+        cell: ({ getValue }) => <DataTableDateCell value={getValue<Date>()} />,
       },
       {
         enableColumnFilter: true,
         meta: {
           label: "Expiry Date",
           placeholder: "Filter expiry...",
-          variant: "date",
+          variant: "dateRange",
           icon: Calendar,
         },
         accessorKey: "expiryDate",
         header: "Expiry Date",
         size: 140,
-        cell: ({ getValue }) =>
-          getValue<Date | null>()
-            ? new Date(getValue<Date>()).toLocaleDateString()
-            : "—",
+        cell: ({ getValue }) => <DataTableDateCell value={getValue<Date>()} />,
       },
       {
         enableColumnFilter: true,
         meta: {
           label: "Created",
           placeholder: "Filter created...",
-          variant: "date",
+          variant: "dateRange",
           icon: Calendar,
         },
         accessorKey: "createdAt",
         header: "Created",
         size: 140,
-        cell: ({ getValue }) => new Date(getValue<Date>()).toLocaleDateString(),
+        cell: ({ getValue }) => <DataTableDateCell value={getValue<Date>()} />,
       },
       {
         enableColumnFilter: true,
         meta: {
           label: "Updated",
           placeholder: "Filter updated...",
-          variant: "date",
+          variant: "dateRange",
           icon: Calendar,
         },
         accessorKey: "updatedAt",
         header: "Updated",
         size: 140,
-        cell: ({ getValue }) => new Date(getValue<Date>()).toLocaleDateString(),
+        cell: ({ getValue }) => <DataTableDateCell value={getValue<Date>()} />,
       },
 
       // Meta
@@ -641,11 +619,8 @@ export const useProductColumns = () => {
         accessorKey: "tags",
         header: "Tags",
         size: 220,
-        cell: ({ getValue, table }) => (
-          <DataTableHighlightCell
-            value={getValue<string[]>().join(", ")}
-            table={table}
-          />
+        cell: ({ getValue }) => (
+          <DataTableTagsCell value={getValue<string[]>()} />
         ),
       },
       {
