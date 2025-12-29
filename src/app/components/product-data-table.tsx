@@ -10,6 +10,7 @@ import { DataTableFilterList } from "@/components/data-table/data-table-filter-l
 import { DataTableExportOptions } from "@/components/data-table/data-table-export-options";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import ProductTableActionBar from "./product-data-table-action-bar";
+import { Input } from "@/components/ui/input";
 
 const categories: ProductCategory[] = [
   "electronics",
@@ -139,16 +140,26 @@ const ProductDataTable = () => {
         height={"calc(100vh - 200px)"}
         actionBar={<ProductTableActionBar table={table} />}
       >
-        <div className="flex items-center justify-end gap-2.5">
-          <DataTableExportOptions table={table} />
-          <DataTableSortList table={table} />
-          <DataTableFilterList
-            table={table}
-            shallow={shallow}
-            debounceMs={debounceMs}
-            throttleMs={throttleMs}
-          />
-          <DataTableViewOptions table={table} align="end" />
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="">
+            <Input
+              placeholder="Search"
+              value={(table.getState().globalFilter as string) ?? ""}
+              onChange={(event) => table.setGlobalFilter(event.target.value)}
+              className="h-8 w-[150px] lg:w-[250px]"
+            />
+          </div>
+          <div className="flex item-center gap-2">
+            <DataTableExportOptions table={table} />
+            <DataTableSortList table={table} />
+            <DataTableFilterList
+              table={table}
+              shallow={shallow}
+              debounceMs={debounceMs}
+              throttleMs={throttleMs}
+            />
+            <DataTableViewOptions table={table} align="end" />
+          </div>
         </div>
       </DataTable>
     </>

@@ -33,6 +33,7 @@ import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { getFiltersStateParser, getSortingStateParser } from "@/lib/parsers";
 import type { ExtendedColumnSort, QueryKeys } from "@/types/data-table";
 
+const SEARCH_KEY = "search";
 const PAGE_KEY = "page";
 const PER_PAGE_KEY = "perPage";
 const SORT_KEY = "sort";
@@ -83,6 +84,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   const sortKey = queryKeys?.sort ?? SORT_KEY;
   const filtersKey = queryKeys?.filters ?? FILTERS_KEY;
   const joinOperatorKey = queryKeys?.joinOperator ?? JOIN_OPERATOR_KEY;
+  const searchKey = queryKeys?.search ?? SEARCH_KEY;
 
   const queryStateOptions = React.useMemo<
     Omit<UseQueryStateOptions<string>, "parse">
@@ -156,6 +158,23 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getSortingStateParser<TData>(columnIds)
       .withOptions(queryStateOptions)
       .withDefault(initialState?.sorting ?? [])
+  );
+
+  const [globalFilter, setGlobalFilter] = useQueryState(
+    searchKey,
+    parseAsString.withOptions(queryStateOptions).withDefault("")
+  );
+
+  const onGlobalFilterChange = React.useCallback(
+    (updaterOrValue: Updater<string>) => {
+      if (typeof updaterOrValue === "function") {
+        const newFilter = updaterOrValue(globalFilter);
+        void setGlobalFilter(newFilter);
+      } else {
+        void setGlobalFilter(updaterOrValue);
+      }
+    },
+    [globalFilter, setGlobalFilter]
   );
 
   const onSortingChange = React.useCallback(
@@ -292,6 +311,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       columnVisibility,
       rowSelection,
       columnFilters,
+      globalFilter,
     },
     defaultColumn: {
       ...tableProps.defaultColumn,
@@ -306,6 +326,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     onSortingChange,
     onColumnFiltersChange,
     onColumnVisibilityChange: setColumnVisibility,
+    onGlobalFilterChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -324,6 +345,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
         sort: sortKey,
         filters: filtersKey,
         joinOperator: joinOperatorKey,
+        search: searchKey,
       },
     },
   });
