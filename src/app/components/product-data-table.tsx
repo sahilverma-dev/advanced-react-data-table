@@ -32,7 +32,11 @@ const statuses: ProductStatus[] = [
 ];
 
 const generateProduct = (): Product => {
-  const costPrice = faker.number.float({ min: 5, max: 500, fractionDigits: 2 });
+  const costPrice = faker.number.float({
+    min: 10,
+    max: 500,
+    fractionDigits: 2,
+  });
   const retailPrice = faker.number.float({
     min: costPrice + 5,
     max: costPrice * 1.8,
