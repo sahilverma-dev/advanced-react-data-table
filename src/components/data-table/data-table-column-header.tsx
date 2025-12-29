@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import type {
@@ -146,7 +147,7 @@ export function DataTableColumnHeader<TData, TValue>({
     column.columnDef.meta?.headerVariant === "label-only"
   ) {
     return (
-      <div className={cn("flex h-8 items-center space-x-2 text-xs", className)}>
+      <div className={cn("group flex h-8 items-center text-xs", className)}>
         <span className="truncate">{label}</span>
         {header.column.getCanResize() && (
           <DataTableColumnResizer
@@ -160,14 +161,14 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex group items-center gap-2 w-full", className)}>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
             className={cn(
-              "-ml-3 h-8 data-[state=open]:bg-accent",
+              "-ml-3 h-8 w-full text-left justify-between items-center data-[state=open]:bg-accent",
               isAnyColumnResizing && "pointer-events-none"
             )}
             onPointerDown={onTriggerPointerDown}
@@ -194,6 +195,12 @@ export function DataTableColumnHeader<TData, TValue>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={0} className="w-60">
+          {column.getCanFilter() && (
+            <>
+              <DataTableColumnFilter header={header} />
+              {column.getCanSort() && <DropdownMenuSeparator />}
+            </>
+          )}
           {column.getCanSort() && (
             <>
               <DropdownMenuCheckboxItem
@@ -218,13 +225,6 @@ export function DataTableColumnHeader<TData, TValue>({
                   Remove sort
                 </DropdownMenuItem>
               )}
-            </>
-          )}
-
-          {column.getCanFilter() && (
-            <>
-              {column.getCanSort() && <DropdownMenuSeparator />}
-              <DataTableColumnFilter header={header} />
             </>
           )}
 
@@ -331,7 +331,7 @@ function DataTableColumnFilter<TData, TValue>({
         {!!value && (
           <div className="flex justify-end">
             <button
-              className="text-xs text-muted-foreground hover:text-foreground"
+              className="text-xs text-destructive hover:text-destructive/50"
               onClick={(e) => {
                 e.stopPropagation();
                 handleFilterChange(undefined);
@@ -378,7 +378,6 @@ function DataTableColumnFilter<TData, TValue>({
           <TabsContent value="range" className="mt-2">
             <Calendar
               mode="range"
-              initialFocus
               selected={
                 Array.isArray(value) && value.length === 2
                   ? {
@@ -428,7 +427,7 @@ function DataTableColumnFilter<TData, TValue>({
   const isMulti = variant === "multiSelect";
 
   return (
-    <div className="p-2">
+    <div className="w-full group">
       <Command>
         <CommandInput placeholder="Search..." autoFocus />
         <CommandList>
@@ -541,10 +540,10 @@ function DataTableColumnResizerImpl<TData, TValue>({
       aria-valuemax={defaultColumnDef.maxSize}
       tabIndex={0}
       className={cn(
-        "after:-translate-x-1/2 -end-px absolute top-0 z-50 h-full w-0.5 cursor-ew-resize touch-none select-none bg-border transition-opacity after:absolute after:inset-y-0 after:start-1/2 after:h-full after:w-[18px] after:content-[''] hover:bg-primary focus:bg-primary focus:outline-none",
+        "h-10 w-0.5 cursor-ew-resize touch-none select-none bg-primary transition-opacity after:absolute after:inset-y-0 after:start-1/2 after:h-full after:w-[18px] after:content-[''] hover:bg-primary focus:bg-primary focus:outline-none",
         header.column.getIsResizing()
           ? "bg-primary"
-          : "opacity-0 hover:opacity-100"
+          : "opacity-0 group-hover:opacity-100"
       )}
       onDoubleClick={onDoubleClick}
       onMouseDown={header.getResizeHandler()}

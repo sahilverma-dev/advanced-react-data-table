@@ -12,7 +12,7 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     label?: string;
     placeholder?: string;
-    headerVariant?: "simple" | "default";
+    headerVariant?: "simple" | "default" | "minimal" | "label-only";
     variant?: FilterVariant;
     options?: Option[];
     range?: [number, number];
