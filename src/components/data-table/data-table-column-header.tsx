@@ -162,7 +162,7 @@ export function DataTableColumnHeader<TData, TValue>({
             variant="ghost"
             size="sm"
             className={cn(
-              "-ml-3 h-8 w-full text-left justify-between items-center data-[state=open]:bg-accent",
+              "h-8 w-full text-left justify-between items-center data-[state=open]:bg-accent",
               isAnyColumnResizing && "pointer-events-none"
             )}
             onPointerDown={onTriggerPointerDown}
