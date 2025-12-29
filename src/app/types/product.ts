@@ -67,4 +67,15 @@ export interface Product {
   /** Metadata (useful for expandable rows) */
   tags: string[];
   notes: string | null;
+
+  /** Owner */
+  owner: User;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  role: string;
+  email: string;
 }

@@ -29,6 +29,7 @@ import {
   Tags,
   FileText,
   EllipsisVerticalIcon,
+  User,
 } from "lucide-react";
 // import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
@@ -50,6 +51,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import DataTableCheckboxCell from "@/components/data-table/cells/data-table-user-cell";
 import { DataTableHighlightCell } from "@/components/data-table/data-table-highlight-cell";
+import { DataTableOwnerCell } from "@/components/data-table/data-table-owner-cell";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
@@ -645,6 +647,19 @@ export const useProductColumns = () => {
             table={table}
           />
         ),
+      },
+      {
+        enableColumnFilter: true,
+        meta: {
+          label: "Owner",
+          placeholder: "Search owner...",
+          variant: "text",
+          icon: User,
+        },
+        accessorKey: "owner",
+        header: "Owner",
+        size: 150,
+        cell: DataTableOwnerCell,
       },
       {
         enableColumnFilter: true,

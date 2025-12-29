@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import type { Product, ProductCategory, ProductStatus } from "../types/product";
 
 import { useProductColumns } from "../hooks/useProductColumns";
+import { users } from "../data/users";
 import { useDataTable } from "@/hooks/use-data-table";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
@@ -25,6 +26,7 @@ const statuses: ProductStatus[] = [
   "active",
   "inactive",
   "out_of_stock",
+  "discontinued",
   "discontinued",
 ];
 
@@ -104,7 +106,10 @@ const generateProduct = (): Product => {
 
     /** Meta */
     tags: faker.helpers.uniqueArray(faker.commerce.productAdjective, 3),
-    notes: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+    notes: faker.datatype.boolean() ? faker.lorem.paragraph() : null,
+
+    /** Owner */
+    owner: faker.helpers.arrayElement(users),
   };
 };
 
