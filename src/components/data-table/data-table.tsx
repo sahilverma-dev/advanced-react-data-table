@@ -82,15 +82,19 @@ export function DataTable<TData>({
         viewportRef={scrollRef}
       >
         <Table className="relative w-full border-collapse table-fixed overflow-x-visible">
-          <TableHeader className="sticky top-0 left-0 z-20 bg-background">
+          <TableHeader className="sticky top-0 left-0 z-20 bg-background [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="">
+              <TableRow
+                key={headerGroup.id}
+                className="shadow-[0_1px_0_0_hsl(var(--border))]"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
                     className={cn(
-                      "border-b border-r last:border-r-0",
+                      "border-r last:border-r-0",
+                      "after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:bg-border after:h-[1px]",
                       getPinnedClasses(header.column, true)
                     )}
                     style={{

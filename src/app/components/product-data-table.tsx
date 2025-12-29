@@ -13,6 +13,7 @@ import { DataTableExportOptions } from "@/components/data-table/data-table-expor
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import ProductTableActionBar from "./product-data-table-action-bar";
 import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 
 export const categories: ProductCategory[] = [
   "electronics",
@@ -122,6 +123,8 @@ const products = Array.from({ length: 100 }, () => generateProduct());
 const ProductDataTable = () => {
   const columns = useProductColumns();
 
+  const [isLoading, setIsLoading] = useState(true);
+
   const { table, shallow, debounceMs, throttleMs } = useDataTable({
     data: products,
     columns,
@@ -143,10 +146,19 @@ const ProductDataTable = () => {
     clearOnDefault: true,
   });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
       <DataTable
         table={table}
+        isLoading={isLoading}
         height={"calc(100vh - 200px)"}
         actionBar={<ProductTableActionBar table={table} />}
       >
