@@ -18,6 +18,20 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { Skeleton } from "../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
+// Helper to determine if a cell is pinned and add appropriate border classes
+const getPinnedClasses = (column: any, isHeader = false) => {
+  const isPinned = column.getIsPinned();
+  if (!isPinned) return "";
+
+  // Add border-l or border-r based on pinning side
+  // Also add background because sticky elements are transparent by default
+  const side =
+    isPinned === "left"
+      ? "shadow-[inset_-1px_0_0_0_hsl(var(--border))]"
+      : "shadow-[inset_1px_0_0_0_hsl(var(--border))]";
+  return cn("sticky z-10 bg-background", side, isHeader && "z-20");
+};
+
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
@@ -71,8 +85,10 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="border-r border-b"
-                    // className="relative bg-background border-s"
+                    className={cn(
+                      "border-b",
+                      getPinnedClasses(header.column, true)
+                    )}
                     style={{
                       ...getCommonPinningStyles({ column: header.column }),
                       width: header.getSize(),
@@ -103,7 +119,7 @@ export function DataTable<TData>({
                   {table.getAllColumns().map((col) => (
                     <TableCell
                       key={col.id}
-                      className="px-2 border-r"
+                      className={cn("px-2", getPinnedClasses(col))}
                       style={{
                         ...getCommonPinningStyles({ column: col }),
                         width: col.getSize(),
@@ -139,11 +155,12 @@ export function DataTable<TData>({
                           <TableCell
                             key={cell.id}
                             className={cn(
-                              "px-4 border-r",
+                              "px-4",
                               cell.column.columnDef.meta?.cell?.variant ===
                                 "long-text"
-                                ? "whitespace-normal break-words"
-                                : "truncate"
+                                ? "whitespace-normal wrap-break-word"
+                                : "truncate",
+                              getPinnedClasses(cell.column)
                             )}
                             style={{
                               ...getCommonPinningStyles({

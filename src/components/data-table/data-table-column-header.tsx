@@ -10,12 +10,14 @@ import type {
 import {
   ChevronDownIcon,
   ChevronUpIcon,
+  ChevronsUpDown,
   EyeOffIcon,
   PinIcon,
   PinOffIcon,
   XIcon,
 } from "lucide-react";
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 
 import {
   DropdownMenu,
@@ -40,6 +42,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CheckIcon } from "lucide-react";
 import { getColumnVariant } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
@@ -128,7 +131,20 @@ export function DataTableColumnHeader<TData, TValue>({
     [table.options.meta, column.id, onPointerDown]
   );
 
-  if (column.columnDef.meta?.headerVariant === "simple") {
+  if (column.columnDef.meta?.headerVariant === "minimal") {
+    return (
+      <div className={cn("flex h-8 w-full items-center", className)}>
+        <span className="truncate text-xs font-medium text-muted-foreground/70">
+          {label}
+        </span>
+      </div>
+    );
+  }
+
+  if (
+    column.columnDef.meta?.headerVariant === "simple" ||
+    column.columnDef.meta?.headerVariant === "label-only"
+  ) {
     return (
       <div className={cn("flex h-8 items-center space-x-2 text-xs", className)}>
         <span className="truncate">{label}</span>
@@ -144,22 +160,23 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   return (
-    <>
+    <div className={cn("flex items-center gap-2", className)}>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          className={cn(
-            "flex size-full items-center justify-between gap-2 text-xs px-2 hover:bg-accent/40 data-[state=open]:bg-accent/40 [&_svg]:size-4",
-            isAnyColumnResizing && "pointer-events-none",
-            className
-          )}
-          onPointerDown={onTriggerPointerDown}
-          {...props}
-        >
-          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "-ml-3 h-8 data-[state=open]:bg-accent",
+              isAnyColumnResizing && "pointer-events-none"
+            )}
+            onPointerDown={onTriggerPointerDown}
+            {...props}
+          >
             {columnVariant && (
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
-                  <columnVariant.icon className="size-3.5 shrink-0 text-muted-foreground" />
+                  <columnVariant.icon className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top">
                   <p>{columnVariant.label}</p>
@@ -167,15 +184,14 @@ export function DataTableColumnHeader<TData, TValue>({
               </Tooltip>
             )}
             <span className="truncate">{label}</span>
-          </div>
-          {column.getFilterValue() ? (
-            <div className="flex items-center justify-center rounded-full bg-primary/10 p-0.5">
-              <span className="sr-only">Filter active</span>
-              <div className="size-1.5 rounded-full bg-primary" />
-            </div>
-          ) : (
-            <ChevronDownIcon className="shrink-0 text-muted-foreground" />
-          )}
+            {column.getIsSorted() === "desc" ? (
+              <ChevronDownIcon className="ml-2 h-4 w-4" />
+            ) : column.getIsSorted() === "asc" ? (
+              <ChevronUpIcon className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+            )}
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={0} className="w-60">
           {column.getCanSort() && (
@@ -268,6 +284,7 @@ export function DataTableColumnHeader<TData, TValue>({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
       {header.column.getCanResize() && (
         <DataTableColumnResizer
           header={header}
@@ -275,7 +292,7 @@ export function DataTableColumnHeader<TData, TValue>({
           label={label as string}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -301,7 +318,7 @@ function DataTableColumnFilter<TData, TValue>({
 
   if (variant === "text" || variant === "number") {
     return (
-      <div className="p-2">
+      <div className="p-2 space-y-2">
         <Input
           placeholder={`Search ${
             column.columnDef.meta?.label?.toLowerCase() ?? "values"
@@ -309,42 +326,99 @@ function DataTableColumnFilter<TData, TValue>({
           value={(value as string) ?? ""}
           onChange={(e) => handleFilterChange(e.target.value)}
           className="h-8"
+          autoFocus
         />
+        {!!value && (
+          <div className="flex justify-end">
+            <button
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilterChange(undefined);
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
       </div>
     );
   }
 
-  if (variant === "dateRange") {
+  if (variant === "dateRange" || variant === "date") {
     return (
-      <div className="p-2">
-        <Calendar
-          mode="range"
-          selected={
-            Array.isArray(value) && value.length === 2
-              ? {
-                  from: value[0] ? new Date(value[0]) : undefined,
-                  to: value[1] ? new Date(value[1]) : undefined,
-                }
-              : (value as any)
-          }
-          onSelect={(val) => {
-            if (val) {
-              const dateRange = val as { from?: Date; to?: Date };
-              const newValue = [
-                dateRange.from?.toISOString() ?? "",
-                dateRange.to?.toISOString() ?? "",
-              ];
-              if (!newValue[0] && !newValue[1]) {
-                handleFilterChange(undefined);
-              } else {
-                handleFilterChange(newValue);
+      <div className="p-2 space-y-2">
+        <Tabs
+          defaultValue={variant === "date" ? "single" : "range"}
+          className="w-[250px]"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="single">Single</TabsTrigger>
+            <TabsTrigger value="range">Range</TabsTrigger>
+          </TabsList>
+          <TabsContent value="single" className="mt-2">
+            <Calendar
+              mode="single"
+              initialFocus
+              selected={
+                Array.isArray(value) && value[0]
+                  ? new Date(value[0])
+                  : undefined
               }
-            } else {
+              onSelect={(val) => {
+                if (val) {
+                  const iso = val.toISOString();
+                  handleFilterChange([iso, iso]);
+                } else {
+                  handleFilterChange(undefined);
+                }
+              }}
+            />
+          </TabsContent>
+          <TabsContent value="range" className="mt-2">
+            <Calendar
+              mode="range"
+              initialFocus
+              selected={
+                Array.isArray(value) && value.length === 2
+                  ? {
+                      from: value[0] ? new Date(value[0]) : undefined,
+                      to: value[1] ? new Date(value[1]) : undefined,
+                    }
+                  : (value as any)
+              }
+              onSelect={(val) => {
+                if (val) {
+                  const dateRange = val as { from?: Date; to?: Date };
+                  const newValue = [
+                    dateRange.from?.toISOString() ?? "",
+                    dateRange.to?.toISOString() ?? "",
+                  ];
+                  if (!newValue[0] && !newValue[1]) {
+                    handleFilterChange(undefined);
+                  } else {
+                    handleFilterChange(newValue);
+                  }
+                } else {
+                  handleFilterChange(undefined);
+                }
+              }}
+              numberOfMonths={2}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end">
+          <button
+            className="text-xs text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation();
               handleFilterChange(undefined);
-            }
-          }}
-          numberOfMonths={2}
-        />
+            }}
+          >
+            Reset
+          </button>
+        </div>
       </div>
     );
   }
@@ -356,7 +430,7 @@ function DataTableColumnFilter<TData, TValue>({
   return (
     <div className="p-2">
       <Command>
-        <CommandInput placeholder="Search..." />
+        <CommandInput placeholder="Search..." autoFocus />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup>
@@ -378,11 +452,6 @@ function DataTableColumnFilter<TData, TValue>({
                         ? current.filter((v) => v !== option.value)
                         : [...current, option.value];
 
-                      // Prevent menu from closing
-                      // Note: The event is not strictly exposed here in all versions of cmk,
-                      // but we can try to rely on state update not closing it if we don't trigger typical close actions.
-                      // However, standard Radix/CMDK dropdown items normally close on select.
-                      // We'll rely on the parent causing re-render but we need to ensure visibility.
                       handleFilterChange(next.length ? next : undefined);
                     } else {
                       handleFilterChange(
@@ -409,6 +478,18 @@ function DataTableColumnFilter<TData, TValue>({
               );
             })}
           </CommandGroup>
+          {!!value && (
+            <>
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => handleFilterChange(undefined)}
+                  className="justify-center text-center font-medium text-muted-foreground"
+                >
+                  Reset filters
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       </Command>
     </div>
