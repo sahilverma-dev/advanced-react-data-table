@@ -14,8 +14,6 @@ import { DataTableViewOptions } from "@/components/data-table/data-table-view-op
 import ProductTableActionBar from "./product-data-table-action-bar";
 import { Input } from "@/components/ui/input";
 
-import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-menu";
-
 export const categories: ProductCategory[] = [
   "electronics",
   "fashion",
@@ -156,7 +154,6 @@ const ProductDataTable = () => {
               onChange={(event) => table.setGlobalFilter(event.target.value)}
               className="h-8 w-[150px] lg:w-[250px]"
             />
-            <DataTableFilterMenu table={table} />
           </div>
           <div className="flex item-center gap-2">
             <DataTableExportOptions table={table} />

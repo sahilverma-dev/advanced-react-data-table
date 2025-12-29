@@ -10,7 +10,7 @@ import type {
 import {
   ChevronDownIcon,
   ChevronUpIcon,
-  ChevronsUpDown,
+  ChevronsUpDownIcon,
   EyeOffIcon,
   PinIcon,
   PinOffIcon,
@@ -33,6 +33,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Command,
@@ -189,7 +191,7 @@ export function DataTableColumnHeader<TData, TValue>({
             ) : column.getIsSorted() === "asc" ? (
               <ChevronUpIcon className="ml-2 h-4 w-4" />
             ) : (
-              <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+              <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
             )}
           </Button>
         </DropdownMenuTrigger>
@@ -295,6 +297,36 @@ export function DataTableColumnHeader<TData, TValue>({
   );
 }
 
+// Helpers for Number/Slider Filter
+interface Range {
+  min: number;
+  max: number;
+}
+type RangeValue = [number, number];
+
+function getIsValidRange(value: unknown): value is RangeValue {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === "number" &&
+    typeof value[1] === "number"
+  );
+}
+
+function parseValuesAsNumbers(value: unknown): RangeValue | undefined {
+  if (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every(
+      (v) =>
+        (typeof v === "string" || typeof v === "number") && !Number.isNaN(v)
+    )
+  ) {
+    return [Number(value[0]), Number(value[1])];
+  }
+  return undefined;
+}
+
 function DataTableColumnFilter<TData, TValue>({
   header,
 }: {
@@ -315,35 +347,147 @@ function DataTableColumnFilter<TData, TValue>({
     column.setFilterValue(val);
   };
 
-  if (variant === "text" || variant === "number") {
+  // --- Number / Range / Slider Logic ---
+  const isNumberVariant = variant === "number" || variant === "range";
+  const id = React.useId();
+  const defaultRange = column.columnDef.meta?.range;
+  const unit = column.columnDef.meta?.unit;
+
+  // Memoize min/max/step calculation
+  const { min, max, step } = React.useMemo<Range & { step: number }>(() => {
+    if (!isNumberVariant) return { min: 0, max: 100, step: 1 };
+
+    let minValue = 0;
+    let maxValue = 100;
+
+    if (defaultRange && getIsValidRange(defaultRange)) {
+      [minValue, maxValue] = defaultRange;
+    } else {
+      const values = column.getFacetedMinMaxValues();
+      if (values && Array.isArray(values) && values.length === 2) {
+        const [facetMinValue, facetMaxValue] = values;
+        if (
+          typeof facetMinValue === "number" &&
+          typeof facetMaxValue === "number"
+        ) {
+          minValue = facetMinValue;
+          maxValue = facetMaxValue;
+        }
+      }
+    }
+
+    const rangeSize = maxValue - minValue;
+    const step =
+      rangeSize <= 20
+        ? 1
+        : rangeSize <= 100
+        ? Math.ceil(rangeSize / 20)
+        : Math.ceil(rangeSize / 50);
+
+    return { min: minValue, max: maxValue, step };
+  }, [column, defaultRange, isNumberVariant]);
+
+  const rangeValue = React.useMemo((): RangeValue => {
+    return (parseValuesAsNumbers(filterValue) ?? [min, max]) as RangeValue;
+  }, [filterValue, min, max]);
+
+  if (isNumberVariant) {
+    const onFromInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const numValue = Number(event.target.value);
+      if (
+        !Number.isNaN(numValue) &&
+        numValue >= min &&
+        numValue <= rangeValue[1]
+      ) {
+        handleFilterChange([numValue, rangeValue[1]]);
+      }
+    };
+
+    const onToInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const numValue = Number(event.target.value);
+      if (
+        !Number.isNaN(numValue) &&
+        numValue <= max &&
+        numValue >= rangeValue[0]
+      ) {
+        handleFilterChange([rangeValue[0], numValue]);
+      }
+    };
+
+    const onSliderValueChange = (val: number[]) => {
+      if (Array.isArray(val) && val.length === 2) {
+        handleFilterChange(val);
+      }
+    };
+
     return (
-      <div className="p-2 space-y-2">
-        <Input
-          placeholder={`Search ${
-            column.columnDef.meta?.label?.toLowerCase() ?? "values"
-          }...`}
-          value={(value as string) ?? ""}
-          onChange={(e) => handleFilterChange(e.target.value)}
-          className="h-8"
-          autoFocus
-        />
-        {!!value && (
-          <div className="flex justify-end">
-            <button
-              className="text-xs text-destructive hover:text-destructive/50"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFilterChange(undefined);
-              }}
-            >
-              Reset
-            </button>
+      <div className="p-2 space-y-4">
+        <div className="flex items-center gap-4">
+          <Label htmlFor={`${id}-from`} className="sr-only">
+            From
+          </Label>
+          <div className="relative">
+            <Input
+              id={`${id}-from`}
+              type="number"
+              inputMode="numeric"
+              min={min}
+              max={max}
+              value={rangeValue[0]}
+              onChange={onFromInputChange}
+              className={cn("h-8 w-24", unit && "pr-8")}
+            />
+            {unit && (
+              <span className="absolute top-0 right-0 bottom-0 flex items-center rounded-r-md bg-accent px-2 text-muted-foreground text-sm">
+                {unit}
+              </span>
+            )}
           </div>
-        )}
+          <Label htmlFor={`${id}-to`} className="sr-only">
+            To
+          </Label>
+          <div className="relative">
+            <Input
+              id={`${id}-to`}
+              type="number"
+              inputMode="numeric"
+              min={min}
+              max={max}
+              value={rangeValue[1]}
+              onChange={onToInputChange}
+              className={cn("h-8 w-24", unit && "pr-8")}
+            />
+            {unit && (
+              <span className="absolute top-0 right-0 bottom-0 flex items-center rounded-r-md bg-accent px-2 text-muted-foreground text-sm">
+                {unit}
+              </span>
+            )}
+          </div>
+        </div>
+        <Slider
+          id={`${id}-slider`}
+          min={min}
+          max={max}
+          step={step}
+          value={rangeValue}
+          onValueChange={onSliderValueChange}
+        />
+        <div className="flex justify-end">
+          <button
+            className="text-xs text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFilterChange(undefined);
+            }}
+          >
+            Reset
+          </button>
+        </div>
       </div>
     );
   }
 
+  // --- Date Range / Date Logic ---
   if (variant === "dateRange" || variant === "date") {
     return (
       <div className="p-2 space-y-2">
@@ -421,75 +565,111 @@ function DataTableColumnFilter<TData, TValue>({
     );
   }
 
-  // Multi-select / Select / Boolean
+  // --- Multi-select / Select / Boolean (Faceted) Logic ---
   const options = column.columnDef.meta?.options ?? [];
   const isMulti = variant === "multiSelect";
 
-  return (
-    <div className="w-full group">
-      <Command>
-        <CommandInput placeholder="Search..." autoFocus />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup>
-            {options.map((option) => {
-              const isSelected = isMulti
-                ? Array.isArray(value) &&
-                  (value as string[]).includes(option.value)
-                : value === option.value;
+  // Use Command list for select/multiselect
+  if (options.length > 0) {
+    return (
+      <div className="w-full group">
+        <Command>
+          <CommandInput placeholder="Search..." autoFocus />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup className="max-h-[300px] overflow-y-auto">
+              {options.map((option) => {
+                const isSelected = isMulti
+                  ? Array.isArray(value) &&
+                    (value as string[]).includes(option.value)
+                  : value === option.value;
 
-              return (
-                <CommandItem
-                  key={option.value}
-                  onSelect={() => {
-                    if (isMulti) {
-                      const current = Array.isArray(value)
-                        ? (value as string[])
-                        : [];
-                      const next = current.includes(option.value)
-                        ? current.filter((v) => v !== option.value)
-                        : [...current, option.value];
+                return (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => {
+                      if (isMulti) {
+                        const current = Array.isArray(value)
+                          ? (value as string[])
+                          : [];
+                        const next = current.includes(option.value)
+                          ? current.filter((v) => v !== option.value)
+                          : [...current, option.value];
 
-                      handleFilterChange(next.length ? next : undefined);
-                    } else {
-                      handleFilterChange(
-                        value === option.value ? undefined : option.value
-                      );
-                    }
-                  }}
-                >
-                  <div
-                    className={cn(
-                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "opacity-50 [&_svg]:invisible"
-                    )}
+                        handleFilterChange(next.length ? next : undefined);
+                      } else {
+                        handleFilterChange(
+                          value === option.value ? undefined : option.value
+                        );
+                      }
+                    }}
                   >
-                    <CheckIcon className={cn("h-4 w-4")} />
-                  </div>
-                  {option.icon && (
-                    <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  )}
-                  <span>{option.label}</span>
-                </CommandItem>
-              );
-            })}
-          </CommandGroup>
-          {!!value && (
-            <>
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => handleFilterChange(undefined)}
-                  className="justify-center text-center font-medium text-muted-foreground"
-                >
-                  Reset filters
-                </CommandItem>
-              </CommandGroup>
-            </>
-          )}
-        </CommandList>
-      </Command>
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50 [&_svg]:invisible"
+                      )}
+                    >
+                      <CheckIcon className={cn("h-4 w-4")} />
+                    </div>
+                    {option.icon && (
+                      <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="truncate">{option.label}</span>
+                    {option.count && (
+                      <span className="ml-auto font-mono text-xs">
+                        {option.count}
+                      </span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+            {!!value && (
+              <>
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={() => handleFilterChange(undefined)}
+                    className="justify-center text-center font-medium text-muted-foreground"
+                  >
+                    Reset filters
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </div>
+    );
+  }
+
+  // --- Default Text Filter ---
+  return (
+    <div className="p-2 space-y-2">
+      <Input
+        placeholder={`Search ${
+          column.columnDef.meta?.label?.toLowerCase() ?? "values"
+        }...`}
+        value={(value as string) ?? ""}
+        onChange={(e) => handleFilterChange(e.target.value)}
+        className="h-8"
+        autoFocus
+      />
+      {!!value && (
+        <div className="flex justify-end">
+          <button
+            className="text-xs text-destructive hover:text-destructive/50"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFilterChange(undefined);
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
     </div>
   );
 }
