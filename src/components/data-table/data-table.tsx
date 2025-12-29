@@ -1,6 +1,10 @@
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
+import {
+  flexRender,
+  type Table as TanstackTable,
+  type Column,
+} from "@tanstack/react-table";
 import type * as React from "react";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
@@ -19,7 +23,7 @@ import { Skeleton } from "../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
 // Helper to determine if a cell is pinned and add appropriate border classes
-const getPinnedClasses = (column: any, isHeader = false) => {
+const getPinnedClasses = <TData,>(column: Column<TData>, isHeader = false) => {
   const isPinned = column.getIsPinned();
   if (!isPinned) return "";
 

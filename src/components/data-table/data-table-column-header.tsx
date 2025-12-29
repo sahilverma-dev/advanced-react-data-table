@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import type {
@@ -384,7 +383,7 @@ function DataTableColumnFilter<TData, TValue>({
                       from: value[0] ? new Date(value[0]) : undefined,
                       to: value[1] ? new Date(value[1]) : undefined,
                     }
-                  : (value as any)
+                  : undefined
               }
               onSelect={(val) => {
                 if (val) {
@@ -436,7 +435,7 @@ function DataTableColumnFilter<TData, TValue>({
             {options.map((option) => {
               const isSelected = isMulti
                 ? Array.isArray(value) &&
-                  (value as any[]).includes(option.value)
+                  (value as string[]).includes(option.value)
                 : value === option.value;
 
               return (
@@ -445,7 +444,7 @@ function DataTableColumnFilter<TData, TValue>({
                   onSelect={() => {
                     if (isMulti) {
                       const current = Array.isArray(value)
-                        ? (value as any[])
+                        ? (value as string[])
                         : [];
                       const next = current.includes(option.value)
                         ? current.filter((v) => v !== option.value)

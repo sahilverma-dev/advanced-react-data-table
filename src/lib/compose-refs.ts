@@ -59,8 +59,8 @@ function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
  * Accepts callback refs and RefObject(s)
  */
 function useComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we don't want to re-run this callback when the refs change
-  return React.useCallback(composeRefs(...refs), refs);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return React.useMemo(() => composeRefs(...refs), refs);
 }
 
 export { composeRefs, useComposedRefs };
