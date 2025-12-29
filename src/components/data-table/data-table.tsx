@@ -63,7 +63,7 @@ export function DataTable<TData>({
         style={{ height }}
         viewportRef={scrollRef}
       >
-        <Table className="relative w-full table-fixed overflow-x-visible">
+        <Table className="relative w-full border-collapse table-fixed overflow-x-visible">
           <TableHeader className="sticky top-0 left-0 z-20  bg-background shadow-xs ">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="">
@@ -71,6 +71,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    className="border-r border-b"
                     // className="relative bg-background border-s"
                     style={{
                       ...getCommonPinningStyles({ column: header.column }),
@@ -102,7 +103,7 @@ export function DataTable<TData>({
                   {table.getAllColumns().map((col) => (
                     <TableCell
                       key={col.id}
-                      className="px-2"
+                      className="px-2 border-r"
                       style={{
                         ...getCommonPinningStyles({ column: col }),
                         width: col.getSize(),
@@ -138,7 +139,7 @@ export function DataTable<TData>({
                           <TableCell
                             key={cell.id}
                             className={cn(
-                              "px-4",
+                              "px-4 border-r",
                               cell.column.columnDef.meta?.cell?.variant ===
                                 "long-text"
                                 ? "whitespace-normal break-words"
