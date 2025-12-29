@@ -49,6 +49,7 @@ import {
 } from "@/components/animate-ui/components/base/tooltip";
 import { Badge } from "@/components/ui/badge";
 import DataTableCheckboxCell from "@/components/data-table/cells/data-table-user-cell";
+import { DataTableHighlightCell } from "@/components/data-table/data-table-highlight-cell";
 
 export const useProductColumns = () => {
   const columns: ColumnDef<Product>[] = useMemo(
@@ -91,7 +92,9 @@ export const useProductColumns = () => {
         },
         accessorKey: "name",
         header: "Name",
-
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell value={row.getValue("name")} table={table} />
+        ),
         size: 220,
       },
       {
@@ -105,6 +108,9 @@ export const useProductColumns = () => {
         accessorKey: "sku",
         header: "SKU",
         size: 140,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell value={row.getValue("sku")} table={table} />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -117,6 +123,12 @@ export const useProductColumns = () => {
         accessorKey: "barcode",
         header: "Barcode",
         size: 150,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell
+            value={row.getValue("barcode")}
+            table={table}
+          />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -129,6 +141,9 @@ export const useProductColumns = () => {
         accessorKey: "brand",
         header: "Brand",
         size: 140,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell value={row.getValue("brand")} table={table} />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -140,11 +155,13 @@ export const useProductColumns = () => {
         },
         accessorKey: "category",
         header: "Category",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, table }) => {
           const value = getValue();
 
           return value ? (
-            <Badge className="capitalize">{value as string}</Badge>
+            <Badge className="capitalize">
+              <DataTableHighlightCell value={value as string} table={table} />
+            </Badge>
           ) : null;
         },
         size: 130,
@@ -304,6 +321,12 @@ export const useProductColumns = () => {
         accessorKey: "warehouseLocation",
         header: "Warehouse",
         size: 140,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell
+            value={row.getValue("warehouseLocation")}
+            table={table}
+          />
+        ),
       },
 
       // Supplier
@@ -318,6 +341,12 @@ export const useProductColumns = () => {
         accessorKey: "supplierName",
         header: "Supplier",
         size: 180,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell
+            value={row.getValue("supplierName")}
+            table={table}
+          />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -330,6 +359,12 @@ export const useProductColumns = () => {
         accessorKey: "supplierEmail",
         header: "Supplier Email",
         size: 220,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell
+            value={row.getValue("supplierEmail")}
+            table={table}
+          />
+        ),
       },
 
       // Analytics
@@ -443,6 +478,12 @@ export const useProductColumns = () => {
         accessorKey: "shippingClass",
         header: "Shipping Class",
         size: 140,
+        cell: ({ row, table }) => (
+          <DataTableHighlightCell
+            value={row.getValue("shippingClass")}
+            table={table}
+          />
+        ),
       },
 
       // Flags
@@ -598,7 +639,12 @@ export const useProductColumns = () => {
         accessorKey: "tags",
         header: "Tags",
         size: 220,
-        cell: ({ getValue }) => getValue<string[]>().join(", "),
+        cell: ({ getValue, table }) => (
+          <DataTableHighlightCell
+            value={getValue<string[]>().join(", ")}
+            table={table}
+          />
+        ),
       },
       {
         enableColumnFilter: true,
@@ -611,7 +657,12 @@ export const useProductColumns = () => {
         accessorKey: "notes",
         header: "Notes",
 
-        cell: ({ getValue }) => getValue<string | null>() ?? "—",
+        cell: ({ getValue, table }) => (
+          <DataTableHighlightCell
+            value={getValue<string | null>() ?? "—"}
+            table={table}
+          />
+        ),
       },
       {
         enableColumnFilter: false,
