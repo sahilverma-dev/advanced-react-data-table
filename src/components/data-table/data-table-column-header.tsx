@@ -339,7 +339,7 @@ function DataTableColumnFilter<TData, TValue>({
 
   const onFilterUpdate = React.useCallback(
     (
-      filterId: string,
+      _: string,
       updates: Partial<Omit<ExtendedColumnFilter<TData>, "filterId">>
     ) => {
       setFilters((prev) => {
