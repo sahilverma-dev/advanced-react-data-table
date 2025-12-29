@@ -137,7 +137,13 @@ export function DataTable<TData>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="px-4 truncate"
+                            className={cn(
+                              "px-4",
+                              cell.column.columnDef.meta?.cell?.variant ===
+                                "long-text"
+                                ? "whitespace-normal break-words"
+                                : "truncate"
+                            )}
                             style={{
                               ...getCommonPinningStyles({
                                 column: cell.column,

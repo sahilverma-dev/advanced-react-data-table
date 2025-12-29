@@ -652,6 +652,9 @@ export const useProductColumns = () => {
           label: "Notes",
           placeholder: "Search notes...",
           variant: "text",
+          cell: {
+            variant: "long-text",
+          },
           icon: FileText,
         },
         accessorKey: "notes",
