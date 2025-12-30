@@ -32,6 +32,7 @@ import * as React from "react";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { getFiltersStateParser, getSortingStateParser } from "@/lib/parsers";
 import type { ExtendedColumnSort, QueryKeys } from "@/types/data-table";
+import { filterFns } from "@/lib/filter-fns";
 
 const SEARCH_KEY = "search";
 const PAGE_KEY = "page";
@@ -266,7 +267,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       advancedFilters.map((filter) => {
         return {
           id: filter.id,
-          value: filter.value,
+          value: filter,
         };
       })
     );
@@ -321,8 +322,10 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       ...tableProps.defaultColumn,
       minSize: 50,
       maxSize: 800,
-      enableColumnFilter: false,
+      enableColumnFilter: true,
+      filterFn: filterFns.advanced,
     },
+    filterFns,
     columnResizeMode: "onEnd",
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
