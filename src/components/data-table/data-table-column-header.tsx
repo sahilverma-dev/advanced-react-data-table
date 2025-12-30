@@ -332,7 +332,14 @@ function DataTableColumnFilter<TData, TValue>({
   }, [filters, column.id, variant]);
 
   const [value, setValue] = React.useState(filter.value);
+  const [operator, setOperator] = React.useState(filter.operator);
   const [showValueSelector, setShowValueSelector] = React.useState(false);
+
+  React.useEffect(() => {
+    if (filter.operator) {
+      setOperator(filter.operator);
+    }
+  }, [filter.operator]);
 
   // Sync state with global filters
   React.useEffect(() => {
@@ -371,11 +378,11 @@ function DataTableColumnFilter<TData, TValue>({
           ) {
             return prev;
           }
-          return [...prev, { ...filter, ...updates }];
+          return [...prev, { ...filter, operator, ...updates }];
         }
       });
     },
-    [column.id, filter, setFilters]
+    [column.id, filter, operator, setFilters]
   );
 
   // Custom Reset Handler to force remove from global state
@@ -390,18 +397,8 @@ function DataTableColumnFilter<TData, TValue>({
   return (
     <div className="p-2 space-y-2">
       <DataTableFilterInput
-        filter={{ ...filter, value }} // Pass local value for immediate feedback if needed, but we rely on nuqs mainly. Actually for inputs we might want controlled local state? `DataTableFilterInput` uses the value from filter prop.
-        // `DataTableFilterInput` calls `onFilterUpdate`.
-        // If we want immediate feedback in input, we might need to rely on `filters` update or local state.
-        // `nuqs` update might be debounced or async.
-        // Let's pass the computed `filter` which derives from `filters` state.
-        // But `filters` is from `useQueryState`.
-        // `DataTableFilterInput` in `data-table-filter-list` was using `filters` from `useQueryState` which was debounced in the list component.
-        // `useQueryState` returns the current state. `setFilters` updates it.
-        // IF we want valid input behavior, `onFilterUpdate` should probably update `filters` immediately?
-        // `getFiltersStateParser` options in `DataTableFilterList` had `throttleMs`.
-        // Here I used `throttleMs: 1000`.
-
+        filter={{ ...filter, value, operator }}
+        // Pass local value and operator for immediate feedback
         inputId={`header-filter-${column.id}`}
         column={column}
         columnMeta={columnMeta}
@@ -409,6 +406,26 @@ function DataTableColumnFilter<TData, TValue>({
         showValueSelector={showValueSelector}
         setShowValueSelector={setShowValueSelector}
       />
+      {(variant === "date" || variant === "dateRange") && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="w-full justify-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            const newOperator = operator === "isBetween" ? "eq" : "isBetween";
+            setOperator(newOperator);
+            onFilterUpdate(filter.filterId, {
+              operator: newOperator,
+              value: undefined,
+            });
+          }}
+        >
+          {operator === "isBetween"
+            ? "Switch to Single Date"
+            : "Switch to Date Range"}
+        </Button>
+      )}
       {!!filter.value && (
         <div className="flex justify-end">
           <button
