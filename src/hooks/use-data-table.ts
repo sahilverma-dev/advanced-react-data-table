@@ -323,7 +323,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       maxSize: 800,
       enableColumnFilter: false,
     },
-    columnResizeMode: "onChange",
+    columnResizeMode: "onEnd",
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onPaginationChange,

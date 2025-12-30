@@ -436,6 +436,13 @@ const DataTableColumnResizer = React.memo(
       return false;
     }
 
+    // If resizing, we need to check if the deltaOffset has changed
+    if (nextColumn.getIsResizing()) {
+      const prevDelta = prev.table.getState().columnSizingInfo.deltaOffset;
+      const nextDelta = next.table.getState().columnSizingInfo.deltaOffset;
+      if (prevDelta !== nextDelta) return false;
+    }
+
     if (prev.label !== next.label) return false;
 
     return true;
@@ -453,6 +460,8 @@ function DataTableColumnResizerImpl<TData, TValue>({
   label,
 }: DataTableColumnResizerProps<TData, TValue>) {
   const defaultColumnDef = table._getDefaultColumnDef();
+  const { isResizingColumn, deltaOffset } = table.getState().columnSizingInfo;
+  const isResizing = header.column.id === isResizingColumn;
 
   const onDoubleClick = React.useCallback(() => {
     header.column.resetSize();
@@ -468,11 +477,14 @@ function DataTableColumnResizerImpl<TData, TValue>({
       aria-valuemax={defaultColumnDef.maxSize}
       tabIndex={0}
       className={cn(
-        "h-10 w-0.5 cursor-ew-resize absolute right-0 top-0 z-50 touch-none select-none bg-primary duration-200 transition-opacity hover:bg-primary focus:bg-primary focus:outline-none",
-        header.column.getIsResizing()
-          ? "bg-primary"
+        "h-10 w-0.5 cursor-ew-resize absolute right-0 top-0 z-50 touch-none select-none bg-primary transition-opacity hover:bg-primary focus:bg-primary focus:outline-none",
+        isResizing
+          ? "bg-primary opacity-100"
           : "opacity-0 group-hover:opacity-100"
       )}
+      style={{
+        transform: isResizing ? `translateX(${deltaOffset}px)` : undefined,
+      }}
       onDoubleClick={onDoubleClick}
       onMouseDown={header.getResizeHandler()}
       onTouchStart={header.getResizeHandler()}
