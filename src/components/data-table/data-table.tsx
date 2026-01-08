@@ -94,7 +94,7 @@ export function DataTable<TData>({
                     colSpan={header.colSpan}
                     className={cn(
                       "border-r last:border-r-0",
-                      "after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:bg-border after:h-[1px]",
+                      "after:pointer-events-none after:absolute after:bottom-0  after:left-0 after:right-0 after:bg-border after:h-px",
                       getPinnedClasses(header.column, true)
                     )}
                     style={{

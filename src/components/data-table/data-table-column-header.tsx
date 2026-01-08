@@ -141,8 +141,10 @@ export function DataTableColumnHeader<TData, TValue>({
     column.columnDef.meta?.headerVariant === "label-only"
   ) {
     return (
-      <div className={cn("group flex h-8 items-center text-xs", className)}>
-        <span className="truncate">{label}</span>
+      <div
+        className={cn("group flex h-8 w-full items-center text-xs", className)}
+      >
+        <span className="truncate w-full">{label}</span>
         {header.column.getCanResize() && (
           <DataTableColumnResizer
             header={header}
@@ -155,40 +157,38 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   return (
-    <div className={cn("flex group items-center gap-2 w-full", className)}>
+    <div className={cn("flex group items-center w-full", className)}>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <span className="block w-full pl-3 -ml-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                " h-8 w-full text-left justify-between items-center data-[state=open]:bg-accent",
-                isAnyColumnResizing && "pointer-events-none"
-              )}
-              onPointerDown={onTriggerPointerDown}
-              {...props}
-            >
-              {columnVariant && (
-                <Tooltip delayDuration={100}>
-                  <TooltipTrigger asChild>
-                    <columnVariant.icon className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>{columnVariant.label}</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-              <span className="truncate">{label}</span>
-              {column.getIsSorted() === "desc" ? (
-                <ChevronDownIcon className="ml-2 h-4 w-4" />
-              ) : column.getIsSorted() === "asc" ? (
-                <ChevronUpIcon className="ml-2 h-4 w-4" />
-              ) : (
-                <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
-              )}
-            </Button>
-          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              " h-8 w-full py-0! px-0 text-left flex justify-between items-center data-[state=open]:bg-accent",
+              isAnyColumnResizing && "pointer-events-none"
+            )}
+            onPointerDown={onTriggerPointerDown}
+            {...props}
+          >
+            {columnVariant && (
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <columnVariant.icon className="mr-2 w-full size-3.5 shrink-0 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>{columnVariant.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <span className="truncate pl-2 flex-1 w-full">{label}</span>
+            {column.getIsSorted() === "desc" ? (
+              <ChevronDownIcon className="size-3 mr-2" />
+            ) : column.getIsSorted() === "asc" ? (
+              <ChevronUpIcon className="size-3 mr-2" />
+            ) : (
+              <ChevronsUpDownIcon className="size-3 mr-2 opacity-50" />
+            )}
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={0} className="w-60">
           {column.getCanFilter() && (
