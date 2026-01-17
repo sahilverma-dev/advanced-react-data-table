@@ -159,7 +159,7 @@ const ProductDataTable = () => {
       <DataTable
         table={table}
         isLoading={isLoading}
-        height={"calc(100vh - 200px)"}
+        height={"calc(100vh - 124px)"}
         actionBar={<ProductTableActionBar table={table} />}
       >
         <div className="flex items-center justify-between gap-2.5">

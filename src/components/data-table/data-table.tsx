@@ -33,7 +33,12 @@ const getPinnedClasses = <TData,>(column: Column<TData>, isHeader = false) => {
     isPinned === "left"
       ? "shadow-[inset_-1px_0_0_0_hsl(var(--border))]"
       : "shadow-[inset_1px_0_0_0_hsl(var(--border))]";
-  return cn("sticky z-10 bg-background", side, isHeader && "z-20");
+  return cn(
+    "sticky z-10",
+    isHeader ? "bg-secondary" : "bg-background",
+    side,
+    isHeader && "z-20"
+  );
 };
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
@@ -82,18 +87,18 @@ export function DataTable<TData>({
         viewportRef={scrollRef}
       >
         <Table className="relative w-full border-collapse table-fixed overflow-x-visible">
-          <TableHeader className="sticky top-0 left-0 z-20 bg-background [&_tr]:border-b-0">
+          <TableHeader className="sticky top-0 left-0 z-20 bg-secondary [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="shadow-[0_1px_0_0_hsl(var(--border))]"
+                className="shadow-[0_1px_0_0_hsl(var(--border))] bg-secondary hover:bg-secondary"
               >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
                     className={cn(
-                      "border-r last:border-r-0",
+                      "bg-secondary border-r last:border-r-0",
                       "after:pointer-events-none after:absolute after:bottom-0  after:left-0 after:right-0 after:bg-border after:h-px",
                       getPinnedClasses(header.column, true)
                     )}
